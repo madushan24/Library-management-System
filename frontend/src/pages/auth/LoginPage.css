@@ -1,0 +1,461 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* PAGE */
+.lp-page {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b1628;
+  padding: 24px;
+}
+
+/* CARD */
+.lp-card {
+  display: flex;
+  width: 960px;
+  max-width: 100%;
+  height: 560px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.65),
+    0 8px 32px rgba(0, 0, 0, 0.40);
+}
+
+/* ── LEFT ── */
+.lp-left {
+  position: relative;
+  width: 520px;
+  flex-shrink: 0;
+  background-image: url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=900&q=80');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  overflow: hidden;
+}
+
+.lp-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    155deg,
+    rgba(5, 12, 40, 0.93) 0%,
+    rgba(8, 18, 58, 0.82) 55%,
+    rgba(5, 12, 40, 0.65) 100%
+  );
+}
+
+.lp-left-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 36px 36px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Brand */
+.lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.lp-brand-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1.5px solid rgba(255, 255, 255, 0.20);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lp-brand-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.46);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.lp-brand-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+}
+
+/* Hero */
+.lp-hero-title {
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+  margin-bottom: 10px;
+}
+
+.lp-hero-desc {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.60);
+  line-height: 1.65;
+  max-width: 380px;
+}
+
+/* Badges */
+.lp-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.lp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+/* Warning */
+.lp-warning {
+  background: rgba(217, 119, 6, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.36);
+  border-radius: 10px;
+  padding: 14px 16px;
+  max-width: 420px;
+}
+
+.lp-warning-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #fbbf24;
+  margin-bottom: 7px;
+}
+
+.lp-warning p {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.54);
+  line-height: 1.65;
+}
+
+/* Status bar */
+.lp-statusbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 36px;
+  background: rgba(0, 0, 0, 0.30);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.36);
+  flex-shrink: 0;
+}
+
+.lp-online {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+}
+
+.lp-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  flex-shrink: 0;
+}
+
+/* ── RIGHT ── */
+.lp-right {
+  flex: 1;
+  background: #f1f5fb;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 34px 38px 26px;
+}
+
+.lp-form-area {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top row */
+.lp-form-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.lp-portal-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.lp-version {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.lp-form-sub {
+  font-size: 12.5px;
+  color: #64748b;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* Role bar */
+.lp-role-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  padding: 8px 13px;
+  margin-bottom: 20px;
+}
+
+.lp-role-main {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: #1d4ed8;
+  text-transform: uppercase;
+}
+
+.lp-role-note {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Fields */
+.lp-field {
+  margin-bottom: 14px;
+}
+
+.lp-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  color: #374151;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.lp-input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lp-ico {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.lp-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 40px 0 36px;
+  border: 1.5px solid #dde3ed;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1e293b;
+  background: #fff;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lp-input::placeholder {
+  color: #b0bec5;
+  font-size: 12.5px;
+}
+
+.lp-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+}
+
+.lp-eye {
+  position: absolute;
+  right: 11px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.lp-eye:hover { color: #475569; }
+
+/* Options row */
+.lp-opt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.lp-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+}
+
+.lp-check input[type='checkbox'] {
+  width: 13px;
+  height: 13px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.lp-forgot {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2563eb;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+
+.lp-forgot:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Error */
+.lp-error {
+  font-size: 12px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+/* Login button */
+.lp-btn {
+  width: 100%;
+  height: 44px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.38);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.10s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.45);
+}
+
+.lp-btn:active:not(:disabled) { transform: translateY(1px); }
+.lp-btn:disabled { opacity: 0.70; cursor: not-allowed; }
+
+/* Spinner */
+.lp-spinner {
+  width: 17px;
+  height: 17px;
+  border: 2.5px solid rgba(255, 255, 255, 0.30);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: lp-spin 0.7s linear infinite;
+}
+
+@keyframes lp-spin { to { transform: rotate(360deg); } }
+
+/* Security row */
+.lp-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #16a34a;
+  font-size: 11px;
+  margin-top: 16px;
+  margin-bottom: 4px;
+}
+
+.lp-support {
+  text-align: center;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.lp-support strong { color: #64748b; }
+
+/* Copyright */
+.lp-copy {
+  text-align: center;
+  font-size: 11px;
+  color: #94a3b8;
+}
