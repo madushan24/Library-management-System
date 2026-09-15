@@ -101,3 +101,27 @@
 .mp-pg--active { background: #1e3a8a; color: #fff; border-color: #1e3a8a; font-weight: 700; }
 .mp-pg--disabled { color: #cbd5e1; cursor: not-allowed; background: #f8fafc; }
 .mp-pg-dots { font-size: 13px; color: #94a3b8; padding: 0 4px; }
+
+/* View button */
+.mp-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  height: 30px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.mp-view-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}

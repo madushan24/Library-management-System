@@ -1,4 +1,5 @@
 ﻿import { useState } from "react"
+import RegisterMemberModal from "../../components/members/RegisterMemberModal"
 import "./MembersPage.css"
 
 const members = [
@@ -25,7 +26,7 @@ const ExportIcon  = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="
 const SmsIcon     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 const MailIcon    = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 const PrintIcon   = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-const DotsIcon    = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+const EyeIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 const BookIcon    = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
 const UsersIcon   = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 const AlertIcon   = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -37,6 +38,7 @@ export default function MembersPage() {
   const [search, setSearch]       = useState("")
   const [statusFilter, setStatus] = useState("All Statuses")
   const [hasFines, setHasFines]   = useState(false)
+  const [showModal, setShowModal] = useState(false)
 
   const filtered = members.filter(m => {
     const matchSearch = m.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -62,7 +64,7 @@ export default function MembersPage() {
         </div>
         <div className="mp-header-actions">
           <button className="mp-export-btn"><ExportIcon /> Export</button>
-          <button className="mp-register-btn"><PlusIcon /> Register Member</button>
+          <button className="mp-register-btn" onClick={() => setShowModal(true)}><PlusIcon /> Register Member</button>
         </div>
       </div>
 
@@ -173,7 +175,7 @@ export default function MembersPage() {
                       <span className="mp-dot" style={{ background: st.dot }} />{m.status}
                     </span>
                   </td>
-                  <td><button className="mp-dots"><DotsIcon /></button></td>
+                  <td><button className="mp-view-btn"><EyeIcon /> View</button></td>
                 </tr>
               )
             })}
@@ -192,6 +194,12 @@ export default function MembersPage() {
           </div>
         </div>
       </div>
+      {showModal && (
+        <RegisterMemberModal
+          onClose={() => setShowModal(false)}
+          onSave={(data) => { console.log("New member:", data); setShowModal(false) }}
+        />
+      )}
     </div>
   )
 }
@@ -199,3 +207,6 @@ export default function MembersPage() {
 function BookIcon2() {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
 }
+
+
+
