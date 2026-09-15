@@ -12,6 +12,11 @@ export default function MainLayout() {
         <main className="layout-main">
           <Outlet />
         </main>
+        <footer className="layout-footer">
+          <span>© 2026 DeepTech Software Solutions. All Rights Reserved.</span>
+          <span className="layout-footer-divider">·</span>
+          <span>Library Management System <span className="layout-footer-version">v4.2 LTS</span></span>
+        </footer>
       </div>
     </div>
   )

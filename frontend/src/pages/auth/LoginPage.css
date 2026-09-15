@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -31,9 +31,10 @@ html, body, #root {
   box-shadow:
     0 40px 100px rgba(0, 0, 0, 0.65),
     0 8px 32px rgba(0, 0, 0, 0.40);
+  border: 2px solid rgba(255, 255, 255, 0.18);
 }
 
-/* ── LEFT ── */
+/* â”€â”€ LEFT â”€â”€ */
 .lp-left {
   position: relative;
   width: 520px;
@@ -197,7 +198,7 @@ html, body, #root {
   flex-shrink: 0;
 }
 
-/* ── RIGHT ── */
+/* â”€â”€ RIGHT â”€â”€ */
 .lp-right {
   flex: 1;
   background: #f1f5fb;
@@ -459,3 +460,4 @@ html, body, #root {
   font-size: 11px;
   color: #94a3b8;
 }
+

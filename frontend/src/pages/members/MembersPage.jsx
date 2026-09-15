@@ -1,5 +1,6 @@
 ﻿import { useState } from "react"
 import RegisterMemberModal from "../../components/members/RegisterMemberModal"
+import MemberProfileModal from "../../components/members/MemberProfileModal"
 import "./MembersPage.css"
 
 const members = [
@@ -39,6 +40,7 @@ export default function MembersPage() {
   const [statusFilter, setStatus] = useState("All Statuses")
   const [hasFines, setHasFines]   = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [selectedMember, setSelectedMember] = useState(null)
 
   const filtered = members.filter(m => {
     const matchSearch = m.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -175,7 +177,7 @@ export default function MembersPage() {
                       <span className="mp-dot" style={{ background: st.dot }} />{m.status}
                     </span>
                   </td>
-                  <td><button className="mp-view-btn"><EyeIcon /> View</button></td>
+                  <td><button className="mp-view-btn" onClick={() => setSelectedMember(m)}><EyeIcon /> View</button></td>
                 </tr>
               )
             })}
@@ -194,6 +196,9 @@ export default function MembersPage() {
           </div>
         </div>
       </div>
+      {selectedMember && (
+        <MemberProfileModal member={selectedMember} onClose={() => setSelectedMember(null)} />
+      )}
       {showModal && (
         <RegisterMemberModal
           onClose={() => setShowModal(false)}
@@ -207,6 +212,7 @@ export default function MembersPage() {
 function BookIcon2() {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
 }
+
 
 
 
