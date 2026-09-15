@@ -1,0 +1,53 @@
+.ib { display: flex; flex-direction: column; gap: 20px; }
+.ib-header {}
+.ib-title { font-size: 20px; font-weight: 800; color: #1e293b; }
+.ib-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+.ib-steps { display: flex; align-items: center; gap: 0; background: #fff; border-radius: 10px; padding: 18px 24px; border: 1px solid #e8edf5; }
+.ib-step { display: flex; align-items: center; gap: 10px; flex: 1; font-size: 13px; font-weight: 500; color: #94a3b8; }
+.ib-step:not(:last-child)::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; margin: 0 16px; }
+.ib-step.active { color: #1e3a8a; font-weight: 700; }
+.ib-step.done { color: #16a34a; }
+.ib-step-num { width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.ib-step.active .ib-step-num { background: #1e3a8a; color: #fff; }
+.ib-step.done .ib-step-num { background: #16a34a; color: #fff; }
+
+.ib-body {}
+.ib-card { background: #fff; border-radius: 10px; padding: 24px; border: 1px solid #e8edf5; max-width: 600px; }
+.ib-card-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+.ib-form { display: flex; flex-direction: column; gap: 8px; }
+.ib-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; color: #374151; text-transform: uppercase; }
+.ib-input-row { display: flex; gap: 8px; }
+.ib-input { flex: 1; height: 42px; padding: 0 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13.5px; color: #1e293b; font-family: inherit; transition: border-color 0.15s; }
+.ib-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
+.ib-btn { display: flex; align-items: center; gap: 6px; padding: 0 18px; height: 42px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; white-space: nowrap; transition: all 0.12s; }
+.ib-btn--primary { background: #1e3a8a; color: #fff; }
+.ib-btn--success { background: #10b981; color: #fff; }
+.ib-btn--ghost { background: #f1f5f9; color: #475569; }
+
+.ib-found-member { display: flex; align-items: center; gap: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; }
+.ib-member-av { width: 36px; height: 36px; border-radius: 50%; background: #1e3a8a; color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ib-member-name { font-size: 14px; font-weight: 700; color: #1e293b; }
+.ib-member-meta { font-size: 11.5px; color: #64748b; }
+.ib-active { font-size: 10px; font-weight: 700; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; border-radius: 4px; padding: 2px 8px; margin-left: auto; }
+
+.ib-book-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.ib-book-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.12s; }
+.ib-book-item:hover { border-color: #2563eb; background: #eff6ff; }
+.ib-book-item.selected { border-color: #1e3a8a; background: #eff6ff; }
+.ib-book-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.ib-book-auth { font-size: 11px; color: #64748b; }
+.ib-avail { font-size: 11.5px; font-weight: 600; color: #16a34a; white-space: nowrap; }
+
+.ib-confirm-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.ib-confirm-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 7px; font-size: 13px; }
+.ib-confirm-row span { color: #64748b; }
+.ib-confirm-row strong { color: #1e293b; }
+.ib-confirm-actions { display: flex; gap: 10px; }
+
+.ib-success { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; background: #fff; border-radius: 12px; border: 1px solid #e8edf5; }
+.ib-success-icon { width: 60px; height: 60px; background: #f0fdf4; border-radius: 50%; font-size: 26px; color: #16a34a; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border: 2px solid #bbf7d0; }
+.ib-success h2 { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+.ib-success p { font-size: 13px; color: #475569; margin-bottom: 4px; }
+.ib-success-dates { color: #64748b; font-size: 12px; margin-bottom: 20px; }
+.ib-new-btn { padding: 0 24px; height: 40px; background: #1e3a8a; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }

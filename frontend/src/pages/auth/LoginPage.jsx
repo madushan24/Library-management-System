@@ -1,7 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { authenticate } from '../../constants/auth'
 import './LoginPage.css'
 
 export default function LoginPage() {
+  const navigate = useNavigate()
   const [showPw, setShowPw] = useState(false)
   const [keep, setKeep] = useState(false)
   const [user, setUser] = useState('')
@@ -12,10 +15,20 @@ export default function LoginPage() {
   const submit = (e) => {
     e.preventDefault()
     setErr('')
-    if (!user.trim()) return setErr('Username or email is required.')
-    if (!pw.trim()) return setErr('Password is required.')
+    if (!user.trim()) return setErr('Email is required.')
+    if (!pw.trim())   return setErr('Password is required.')
     setLoading(true)
-    setTimeout(() => { setLoading(false); setErr('Invalid credentials. Please try again.') }, 1200)
+    setTimeout(() => {
+      setLoading(false)
+      const account = authenticate(user, pw)
+      if (account) {
+        // Store session — will be replaced with JWT in Phase 17
+        sessionStorage.setItem('lms_user', JSON.stringify(account))
+        navigate(account.role === 'ADMIN' ? '/dashboard' : '/librarian')
+      } else {
+        setErr('Invalid email or password. Please try again.')
+      }
+    }, 900)
   }
 
   return (
@@ -105,7 +118,7 @@ export default function LoginPage() {
                   <input
                     className="lp-input"
                     type="text"
-                    placeholder="e.g., k.perera@library.ac.lk or admin_staff"
+                    placeholder="e.g., admin@gmail.com"
                     value={user}
                     onChange={e => setUser(e.target.value)}
                     autoComplete="username"

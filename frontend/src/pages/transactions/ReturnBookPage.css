@@ -1,0 +1,40 @@
+.rb { display: flex; flex-direction: column; gap: 20px; }
+.rb-title { font-size: 20px; font-weight: 800; color: #1e293b; }
+.rb-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+.rb-card { background: #fff; border-radius: 10px; padding: 24px; border: 1px solid #e8edf5; max-width: 640px; }
+.rb-card-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 14px; }
+.rb-form { display: flex; flex-direction: column; gap: 8px; }
+.rb-input-row { display: flex; gap: 8px; }
+.rb-input { flex: 1; height: 42px; padding: 0 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13.5px; color: #1e293b; font-family: inherit; }
+.rb-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
+.rb-btn { display: flex; align-items: center; gap: 6px; padding: 0 18px; height: 42px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; }
+.rb-btn--primary { background: #1e3a8a; color: #fff; }
+.rb-btn--success { background: #10b981; color: #fff; }
+.rb-btn--ghost { background: #f1f5f9; color: #475569; }
+
+.rb-member-banner { display: flex; align-items: center; gap: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 14px; }
+.rb-member-av { width: 36px; height: 36px; border-radius: 50%; background: #1e3a8a; color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.rb-member-name { font-size: 14px; font-weight: 700; color: #1e293b; }
+.rb-member-meta { font-size: 11.5px; color: #64748b; }
+
+.rb-book-list { display: flex; flex-direction: column; gap: 8px; }
+.rb-book-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.12s; }
+.rb-book-item:hover { border-color: #2563eb; background: #eff6ff; }
+.rb-book-name { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 3px; }
+.rb-book-meta { font-size: 11px; color: #64748b; }
+.rb-overdue-badge { font-size: 11px; font-weight: 700; background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; border-radius: 5px; padding: 3px 9px; white-space: nowrap; }
+.rb-ok-badge { font-size: 11px; font-weight: 700; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; border-radius: 5px; padding: 3px 9px; }
+
+.rb-confirm-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.rb-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 7px; font-size: 13px; }
+.rb-row span { color: #64748b; }
+.rb-row strong { color: #1e293b; }
+.rb-row--fine { background: #fffbeb; border: 1px solid #fde68a; }
+.rb-confirm-actions { display: flex; gap: 10px; }
+
+.rb-success { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; background: #fff; border-radius: 12px; border: 1px solid #e8edf5; }
+.rb-success-icon { width: 60px; height: 60px; background: #f0fdf4; border-radius: 50%; font-size: 26px; color: #16a34a; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border: 2px solid #bbf7d0; }
+.rb-success h2 { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+.rb-success p { font-size: 13px; color: #475569; margin-bottom: 4px; }
+.rb-fine-note { color: #ef4444; font-weight: 600; margin-bottom: 20px; }
+.rb-new-btn { padding: 0 24px; height: 40px; background: #10b981; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 16px; }

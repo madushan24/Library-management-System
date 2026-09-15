@@ -1,0 +1,44 @@
+.lbp { display: flex; flex-direction: column; gap: 16px; }
+.lbp-admin-banner { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 16px; font-size: 12.5px; font-weight: 600; color: #92400e; }
+.lbp-admin-icon { font-size: 14px; }
+.lbp-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.lbp-title { font-size: 20px; font-weight: 800; color: #1e293b; }
+.lbp-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+.lbp-add-btn { display: flex; align-items: center; gap: 6px; padding: 0 16px; height: 36px; background: #1e3a8a; color: #fff; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.lbp-toolbar { display: flex; gap: 10px; }
+.lbp-search { display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0 12px; height: 38px; max-width: 360px; flex: 1; color: #94a3b8; }
+.lbp-search input { flex: 1; border: none; outline: none; font-size: 13px; color: #475569; font-family: inherit; background: none; }
+.lbp-card { background: #fff; border-radius: 10px; border: 1px solid #e8edf5; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.lbp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lbp-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; padding: 10px 14px; text-align: left; background: #fafbfc; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+.lbp-table td { padding: 11px 14px; border-bottom: 1px solid #f8fafc; color: #475569; vertical-align: middle; }
+.lbp-table tr:hover td { background: #fafbff; }
+.lbp-id { font-size: 11.5px; font-weight: 700; color: #2563eb; }
+.lbp-name-row { display: flex; align-items: center; gap: 9px; }
+.lbp-avatar { width: 30px; height: 30px; border-radius: 50%; background: #1e3a8a; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lbp-name { font-weight: 600; color: #1e293b; }
+.lbp-username { font-family: monospace; font-size: 12.5px; color: #475569; }
+.lbp-email { font-size: 12px; color: #64748b; }
+.lbp-status { font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 3px 9px; white-space: nowrap; }
+.lbp-actions { display: flex; gap: 5px; }
+.lbp-btn { padding: 4px 9px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; white-space: nowrap; }
+.lbp-btn--edit  { background: #eff6ff; color: #2563eb; }
+.lbp-btn--reset { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+.lbp-btn--deact { background: #fef2f2; color: #ef4444; }
+.lbp-btn--act   { background: #f0fdf4; color: #16a34a; }
+.lbp-footer { padding: 10px 14px; font-size: 11.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+
+/* Modal */
+.lbp-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.lbp-modal { background: #fff; border-radius: 14px; width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.20); overflow: hidden; }
+.lbp-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid #f1f5f9; }
+.lbp-modal-header h3 { font-size: 16px; font-weight: 700; color: #1e293b; }
+.lbp-modal-close { background: none; border: none; font-size: 16px; color: #94a3b8; cursor: pointer; line-height: 1; }
+.lbp-modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.lbp-field { display: flex; flex-direction: column; gap: 5px; }
+.lbp-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #374151; text-transform: uppercase; }
+.lbp-input { height: 40px; padding: 0 13px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #1e293b; font-family: inherit; transition: border-color 0.15s; }
+.lbp-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
+.lbp-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 22px; border-top: 1px solid #f1f5f9; }
+.lbp-cancel-btn { padding: 0 16px; height: 38px; background: #f1f5f9; color: #475569; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.lbp-save-btn   { padding: 0 20px; height: 38px; background: #1e3a8a; color: #fff; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }

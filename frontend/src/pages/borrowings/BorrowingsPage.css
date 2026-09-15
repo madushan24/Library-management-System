@@ -1,0 +1,15 @@
+.brw { display: flex; flex-direction: column; gap: 16px; }
+.brw-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.brw-title { font-size: 20px; font-weight: 800; color: #1e293b; }
+.brw-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+.brw-card { background: #fff; border-radius: 10px; border: 1px solid #e8edf5; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.brw-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.brw-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; padding: 10px 14px; text-align: left; background: #fafbfc; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+.brw-table td { padding: 11px 14px; border-bottom: 1px solid #f8fafc; color: #475569; vertical-align: middle; }
+.brw-table tr:hover td { background: #fafbff; }
+.brw-id { font-size: 11.5px; font-weight: 700; color: #2563eb; }
+.brw-name { font-weight: 600; color: #1e293b; font-size: 13px; }
+.brw-sub2 { font-size: 10.5px; color: #94a3b8; }
+.brw-book { font-size: 12px; color: #1e293b; max-width: 200px; }
+.brw-status { font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 3px 9px; white-space: nowrap; }
+.brw-footer { padding: 10px 14px; font-size: 11.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; }

@@ -1,0 +1,25 @@
+.mp { display: flex; flex-direction: column; gap: 16px; }
+.mp-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.mp-title { font-size: 20px; font-weight: 800; color: #1e293b; }
+.mp-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+.mp-add-btn { display: flex; align-items: center; gap: 6px; padding: 0 16px; height: 36px; background: #1e3a8a; color: #fff; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.mp-add-btn:hover { background: #1e40af; }
+.mp-toolbar { display: flex; gap: 10px; align-items: center; }
+.mp-search { display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0 12px; height: 38px; flex: 1; max-width: 400px; color: #94a3b8; }
+.mp-search input { flex: 1; border: none; outline: none; font-size: 13px; color: #475569; font-family: inherit; background: none; }
+.mp-select { height: 38px; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0 12px; font-size: 13px; color: #475569; background: #fff; font-family: inherit; cursor: pointer; outline: none; }
+.mp-card { background: #fff; border-radius: 10px; border: 1px solid #e8edf5; box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden; }
+.mp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mp-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; padding: 10px 14px; text-align: left; background: #fafbfc; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+.mp-table td { padding: 11px 14px; border-bottom: 1px solid #f8fafc; color: #475569; vertical-align: middle; }
+.mp-table tr:hover td { background: #fafbff; }
+.mp-id { font-size: 12px; font-weight: 700; color: #2563eb; }
+.mp-name { font-weight: 600; color: #1e293b; }
+.mp-email { color: #64748b; font-size: 12px; }
+.mp-borrowed { font-weight: 700; color: #1e293b; }
+.mp-status { font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 3px 9px; white-space: nowrap; }
+.mp-actions { display: flex; gap: 6px; }
+.mp-btn { padding: 4px 10px; border-radius: 5px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; }
+.mp-btn--view { background: #eff6ff; color: #2563eb; }
+.mp-btn--edit { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+.mp-footer { padding: 10px 14px; font-size: 11.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
