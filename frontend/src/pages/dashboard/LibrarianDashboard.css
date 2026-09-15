@@ -32,7 +32,7 @@
 .ld-phone-ico { position: absolute; left: 11px; color: #94a3b8; pointer-events: none; display: flex; align-items: center; }
 .ld-phone-input { flex: 1; height: 44px; padding: 0 10px 0 34px; border: 2px solid #2563eb; border-radius: 8px; font-size: 17px; font-weight: 700; color: #1e293b; background: #f8fafc; font-family: inherit; transition: border-color 0.15s; letter-spacing: 0.05em; }
 .ld-phone-input:focus { outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-.ld-scan-btn { height: 44px; padding: 0 12px; background: #1e3a8a; color: #fff; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
+
 .ld-phone-hint { font-size: 10.5px; color: #94a3b8; margin-bottom: 10px; }
 .ld-phone-hint kbd { background: #f1f5f9; border-radius: 3px; padding: 1px 5px; font-family: inherit; font-size: 10px; }
 .ld-search-row { display: flex; gap: 8px; margin-bottom: 14px; }
@@ -151,3 +151,4 @@
 .ld-collect-btn { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
 .ld-rate-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #f1f5f9; font-size: 11px; color: #64748b; }
 .ld-batch-btn { font-size: 11.5px; font-weight: 600; color: #2563eb; background: none; border: none; cursor: pointer; font-family: inherit; }
+

@@ -93,7 +93,6 @@ export default function LibrarianDashboard() {
                 onChange={e => setPhone(e.target.value)}
                 placeholder="077 123 4567"
               />
-              <button type="button" className="ld-scan-btn"><ScanIcon /> SCAN</button>
             </div>
             <div className="ld-phone-hint">
               Example: <strong>0771234567</strong> &nbsp;&nbsp; Press <kbd>Enter</kbd> to search
@@ -319,3 +318,4 @@ export default function LibrarianDashboard() {
     </div>
   )
 }
+

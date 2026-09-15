@@ -26,3 +26,32 @@ html, body, #root {
   overflow-y: auto;
   padding: 24px;
 }
+
+.layout-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: #fff;
+  border-top: 1px solid #e8edf5;
+  font-size: 11.5px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.layout-footer-divider {
+  color: #cbd5e1;
+}
+
+.layout-footer-version {
+  font-size: 10.5px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 4px;
+  padding: 1px 6px;
+  border: 1px solid #e2e8f0;
+  margin-left: 4px;
+}
