@@ -1,7 +1,7 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+﻿import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import './AdminDashboard.css'
 
-// ── Mock data ──────────────────────────────────────────────
+//  Mock data 
 const borrowingData = [
   { day: 'Mon', issued: 55, returned: 40 },
   { day: 'Tue', issued: 70, returned: 52 },
@@ -42,7 +42,7 @@ const recentActivity = [
   { type: 'catalog', color: '#6366f1', text: 'New catalog accession', detail: 'Artificial Intelligence (Copy #6) added to catalog',         time: '2h ago'  },
 ]
 
-// ── Stat Card ──────────────────────────────────────────────
+//  Stat Card 
 function StatCard({ label, value, sub, subColor, icon, danger }) {
   return (
     <div className={`stat-card${danger ? ' stat-card--danger' : ''}`}>
@@ -56,7 +56,7 @@ function StatCard({ label, value, sub, subColor, icon, danger }) {
   )
 }
 
-// ── Icons ──────────────────────────────────────────────────
+//  Icons 
 const BookIcon    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
 const CheckIcon   = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 const CopyIcon    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
   return (
     <div className="dash">
 
-      {/* ── Header ── */}
+      {/*  Header  */}
       <div className="dash-header">
         <div>
           <p className="dash-header-sub">Overview of library operations, catalog health, and circulation tracking.</p>
@@ -92,17 +92,17 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── KPI Cards ── */}
+      {/*  KPI Cards  */}
       <div className="stat-grid">
-        <StatCard label="TOTAL BOOKS"     value="2,450" sub="↑ +12 this month"     subColor="#10b981" icon={<BookIcon />}   />
-        <StatCard label="AVAILABLE BOOKS" value="1,825" sub="74.5% circulation re…" subColor="#64748b" icon={<CheckIcon />}  />
-        <StatCard label="BORROWED BOOKS"  value="625"   sub="Across 4 active facu…" subColor="#64748b" icon={<CopyIcon />}   />
-        <StatCard label="TOTAL MEMBERS"   value="1,240" sub="↑ +34 new this week"   subColor="#10b981" icon={<UsersIcon />}  />
+        <StatCard label="TOTAL BOOKS"     value="2,450" sub=" +12 this month"     subColor="#10b981" icon={<BookIcon />}   />
+        <StatCard label="AVAILABLE BOOKS" value="1,825" sub="74.5% circulation re" subColor="#64748b" icon={<CheckIcon />}  />
+        <StatCard label="BORROWED BOOKS"  value="625"   sub="Across 4 active facu" subColor="#64748b" icon={<CopyIcon />}   />
+        <StatCard label="TOTAL MEMBERS"   value="1,240" sub=" +34 new this week"   subColor="#10b981" icon={<UsersIcon />}  />
         <StatCard label="OVERDUE BOOKS"   value="48"    sub="+3 requiring notice"   subColor="#ef4444" icon={<AlertIcon />}  danger />
         <StatCard label="UNPAID FINES"    value="Rs. 8,750" sub="Rs. 1/day default rate" subColor="#64748b" icon={<DollarIcon />} />
       </div>
 
-      {/* ── Charts Row ── */}
+      {/*  Charts Row  */}
       <div className="charts-row">
 
         {/* Borrowing Activity */}
@@ -180,7 +180,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── Bottom Row ── */}
+      {/*  Bottom Row  */}
       <div className="bottom-row">
 
         {/* Most Borrowed Books */}
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
               <span className="bottom-card-title"><BarIcon /> Most Borrowed Books</span>
               <p className="bottom-card-sub">Academic year high circulation volumes</p>
             </div>
-            <button className="view-all-btn">View All →</button>
+            <button className="view-all-btn">View All </button>
           </div>
           <table className="data-table">
             <thead>
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-          <button className="audit-btn">Full Audit Log →</button>
+          <button className="audit-btn">Full Audit Log </button>
         </div>
 
       </div>
