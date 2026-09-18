@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage          from './pages/auth/LoginPage'
 import MainLayout         from './components/layout/MainLayout'
 import AdminDashboard     from './pages/dashboard/AdminDashboard'
@@ -13,7 +13,6 @@ import ReportsPage        from './pages/reports/ReportsPage'
 import LibrariansPage     from './pages/librarians/LibrariansPage'
 import SettingsPage       from './pages/settings/SettingsPage'
 
-// Redirect / to the correct dashboard based on stored role
 function RoleRedirect() {
   const stored  = sessionStorage.getItem('lms_user')
   const session = stored ? JSON.parse(stored) : null
@@ -26,7 +25,6 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-
         <Route path="/" element={<MainLayout />}>
           <Route index element={<RoleRedirect />} />
           <Route path="dashboard"  element={<AdminDashboard />} />
@@ -41,7 +39,6 @@ export default function App() {
           <Route path="librarians" element={<LibrariansPage />} />
           <Route path="settings"   element={<SettingsPage />} />
         </Route>
-
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

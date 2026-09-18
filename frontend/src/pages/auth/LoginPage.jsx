@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authenticate } from '../../constants/auth'
 import './LoginPage.css'
@@ -22,7 +22,7 @@ export default function LoginPage() {
       setLoading(false)
       const account = authenticate(user, pw)
       if (account) {
-        // Store session — will be replaced with JWT in Phase 17
+        // Store session  will be replaced with JWT in Phase 17
         sessionStorage.setItem('lms_user', JSON.stringify(account))
         navigate(account.role === 'ADMIN' ? '/dashboard' : '/librarian')
       } else {
@@ -35,7 +35,7 @@ export default function LoginPage() {
     <div className="lp-page">
       <div className="lp-card">
 
-        {/* ── LEFT PANEL ── */}
+        {/*  LEFT PANEL  */}
         <div className="lp-left">
           <div className="lp-overlay" />
           <div className="lp-left-body">
@@ -85,13 +85,13 @@ export default function LoginPage() {
           <div className="lp-statusbar">
             <span className="lp-online">
               <span className="lp-dot" />
-              Core Engine Online &nbsp;·&nbsp; Latency: 18ms
+              Core Engine Online &nbsp;&nbsp; Latency: 18ms
             </span>
-            <span>DeepTech software solutions • v4.2 </span>
+            <span>DeepTech software solutions  v4.2 </span>
           </div>
         </div>
 
-        {/* ── RIGHT PANEL ── */}
+        {/*  RIGHT PANEL  */}
         <div className="lp-right">
           <div className="lp-form-area">
 
@@ -133,7 +133,7 @@ export default function LoginPage() {
                   <input
                     className="lp-input"
                     type={showPw ? 'text' : 'password'}
-                    placeholder="••••••••••••"
+                    placeholder=""
                     value={pw}
                     onChange={e => setPw(e.target.value)}
                     autoComplete="current-password"
@@ -164,12 +164,12 @@ export default function LoginPage() {
 
             <div className="lp-security">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-              256-bit SSL Encrypted &nbsp;•&nbsp; 30-min Session Timeout
+              256-bit SSL Encrypted &nbsp;&nbsp; 30-min Session Timeout
             </div>
             <p className="lp-support">Need IT Support? Contact basnayakamadushan0@gmail.com <strong>(0772272446)</strong></p>
 
           </div>
-          <p className="lp-copy">© 2026 DeepTech software solutions . All Rights Reserved.</p>
+          <p className="lp-copy"> 2026 DeepTech software solutions . All Rights Reserved.</p>
         </div>
 
       </div>

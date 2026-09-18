@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import './FinesPage.css'
 
 const fines = [
@@ -16,28 +16,44 @@ const S = {
 
 export default function FinesPage() {
   const [list] = useState(fines)
-  const total   = list.reduce((s, f) => s + f.amount, 0)
-  const paid    = list.filter(f => f.status === 'PAID').reduce((s, f) => s + f.paid, 0)
-  const unpaid  = list.filter(f => f.status === 'UNPAID').reduce((s, f) => s + f.amount, 0)
+  const total  = list.reduce((s, f) => s + f.amount, 0)
+  const paid   = list.filter(f => f.status === 'PAID').reduce((s, f) => s + f.paid, 0)
+  const unpaid = list.filter(f => f.status === 'UNPAID').reduce((s, f) => s + f.amount, 0)
 
   return (
     <div className="fn">
       <div className="fn-header">
         <h2 className="fn-title">Fines</h2>
-        <p className="fn-sub">Track and collect overdue fines — Rs. 1.00 per day</p>
+        <p className="fn-sub">Track and collect overdue fines &mdash; Rs. 1.00 per day</p>
       </div>
 
       <div className="fn-stats">
-        <div className="fn-stat"><div className="fn-stat-label">TOTAL FINES</div><div className="fn-stat-val">Rs. {total}.00</div></div>
-        <div className="fn-stat fn-stat--paid"><div className="fn-stat-label">PAID</div><div className="fn-stat-val fn-green">Rs. {paid}.00</div></div>
-        <div className="fn-stat fn-stat--unpaid"><div className="fn-stat-label">UNPAID</div><div className="fn-stat-val fn-red">Rs. {unpaid}.00</div></div>
-        <div className="fn-stat"><div className="fn-stat-label">TODAY'S COLLECTION</div><div className="fn-stat-val">Rs. 0.00</div></div>
+        <div className="fn-stat">
+          <div className="fn-stat-label">TOTAL FINES</div>
+          <div className="fn-stat-val">Rs. {total}.00</div>
+        </div>
+        <div className="fn-stat fn-stat--paid">
+          <div className="fn-stat-label">PAID</div>
+          <div className="fn-stat-val fn-green">Rs. {paid}.00</div>
+        </div>
+        <div className="fn-stat fn-stat--unpaid">
+          <div className="fn-stat-label">UNPAID</div>
+          <div className="fn-stat-val fn-red">Rs. {unpaid}.00</div>
+        </div>
+        <div className="fn-stat">
+          <div className="fn-stat-label">TODAY'S COLLECTION</div>
+          <div className="fn-stat-val">Rs. 0.00</div>
+        </div>
       </div>
 
       <div className="fn-card">
         <table className="fn-table">
           <thead>
-            <tr><th>FINE ID</th><th>MEMBER</th><th>PHONE</th><th>BOOK</th><th>OVERDUE DAYS</th><th>AMOUNT</th><th>PAID</th><th>METHOD</th><th>DATE</th><th>STATUS</th><th>ACTION</th></tr>
+            <tr>
+              <th>FINE ID</th><th>MEMBER</th><th>PHONE</th><th>BOOK</th>
+              <th>OVERDUE DAYS</th><th>AMOUNT</th><th>PAID</th><th>METHOD</th>
+              <th>DATE</th><th>STATUS</th><th>ACTION</th>
+            </tr>
           </thead>
           <tbody>
             {list.map(f => {
@@ -53,8 +69,16 @@ export default function FinesPage() {
                   <td>Rs. {f.paid}.00</td>
                   <td>{f.method}</td>
                   <td>{f.date}</td>
-                  <td><span className="fn-status" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>{f.status}</span></td>
-                  <td>{f.status === 'UNPAID' && <button className="fn-collect-btn">Collect</button>}</td>
+                  <td>
+                    <span className="fn-status" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>
+                      {f.status}
+                    </span>
+                  </td>
+                  <td>
+                    {f.status === 'UNPAID' && (
+                      <button className="fn-collect-btn">Collect</button>
+                    )}
+                  </td>
                 </tr>
               )
             })}

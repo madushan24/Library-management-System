@@ -168,7 +168,7 @@ export default function MembersPage() {
                   <td>
                     {m.borrowed > 0
                       ? <span className={`mp-borrow-chip${isMax ? " mp-borrow-chip--max" : ""}`}><BookIcon /> {m.borrowed} / {m.maxBooks} Books{isMax ? " (Max)" : ""}</span>
-                      : <span className="mp-borrow-none">— 0 Books</span>
+                      : <span className="mp-borrow-none"> 0 Books</span>
                     }
                   </td>
                   <td><span className={m.outstanding > 0 ? "mp-fine-red" : "mp-fine-zero"}>Rs. {m.outstanding.toFixed(2)}</span></td>

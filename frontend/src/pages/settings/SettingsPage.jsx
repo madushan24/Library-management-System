@@ -1,11 +1,11 @@
-import './SettingsPage.css'
+﻿import './SettingsPage.css'
 
 export default function SettingsPage() {
   return (
     <div className="sp">
       <div className="sp-admin-banner">
-        <span>🔒</span>
-        <span>ADMIN ONLY — Settings are restricted to Admin users only.</span>
+        <span>&#128274;</span>
+        <span>ADMIN ONLY &mdash; Settings are restricted to Admin users only.</span>
       </div>
 
       <div className="sp-header">
@@ -15,15 +15,14 @@ export default function SettingsPage() {
 
       <div className="sp-grid">
 
-        {/* Library Information */}
         <div className="sp-card">
           <div className="sp-card-title">Library Information</div>
           <div className="sp-fields">
             {[
-              { label: 'Library Name',  val: 'Public Library PADIYATHALAWA' },
-              { label: 'Address',       val: 'Padiyathalawa, Ampara, Sri Lanka' },
-              { label: 'Phone',         val: '+94 63 2 224 400' },
-              { label: 'Email',         val: 'info@padiyathalawa.library.lk' },
+              { label: 'Library Name', val: 'Public Library PADIYATHALAWA' },
+              { label: 'Address',      val: 'Padiyathalawa, Ampara, Sri Lanka' },
+              { label: 'Phone',        val: '+94 63 2 224 400' },
+              { label: 'Email',        val: 'info@padiyathalawa.library.lk' },
             ].map(f => (
               <div key={f.label} className="sp-field">
                 <label className="sp-label">{f.label}</label>
@@ -34,7 +33,6 @@ export default function SettingsPage() {
           <button className="sp-save-btn">Save Changes</button>
         </div>
 
-        {/* Borrowing Settings */}
         <div className="sp-card">
           <div className="sp-card-title">Borrowing Settings</div>
           <div className="sp-fields">
@@ -42,7 +40,7 @@ export default function SettingsPage() {
               <label className="sp-label">Borrowing Period (Days)</label>
               <div className="sp-input-row">
                 <input className="sp-input sp-input--locked" defaultValue="7" readOnly />
-                <span className="sp-locked-note">Fixed — System Rule</span>
+                <span className="sp-locked-note">Fixed &mdash; System Rule</span>
               </div>
             </div>
             <div className="sp-field">
@@ -53,15 +51,14 @@ export default function SettingsPage() {
               <label className="sp-label">Renewal Allowed</label>
               <select className="sp-input">
                 <option>No</option>
-                <option>Yes — 1 time</option>
-                <option>Yes — 2 times</option>
+                <option>Yes &mdash; 1 time</option>
+                <option>Yes &mdash; 2 times</option>
               </select>
             </div>
           </div>
           <button className="sp-save-btn">Save Changes</button>
         </div>
 
-        {/* Fine Settings */}
         <div className="sp-card">
           <div className="sp-card-title">Fine Settings</div>
           <div className="sp-fields">
@@ -69,12 +66,12 @@ export default function SettingsPage() {
               <label className="sp-label">Late Fine per Day</label>
               <div className="sp-input-row">
                 <input className="sp-input sp-input--locked" defaultValue="Rs. 1.00" readOnly />
-                <span className="sp-locked-note">Fixed — System Rule</span>
+                <span className="sp-locked-note">Fixed &mdash; System Rule</span>
               </div>
             </div>
             <div className="sp-field">
               <label className="sp-label">Currency</label>
-              <input className="sp-input sp-input--locked" defaultValue="LKR — Sri Lankan Rupee" readOnly />
+              <input className="sp-input sp-input--locked" defaultValue="LKR &mdash; Sri Lankan Rupee" readOnly />
             </div>
             <div className="sp-field">
               <label className="sp-label">Fine Grace Period (Days)</label>
@@ -84,7 +81,6 @@ export default function SettingsPage() {
           <button className="sp-save-btn">Save Changes</button>
         </div>
 
-        {/* System Settings */}
         <div className="sp-card">
           <div className="sp-card-title">System Settings</div>
           <div className="sp-fields">
