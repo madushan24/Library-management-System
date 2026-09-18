@@ -64,7 +64,8 @@
 .abm-step-label { font-size: 12px; font-weight: 600; color: #94a3b8; white-space: nowrap; }
 .abm-step--active .abm-step-label { color: #1e293b; }
 .abm-step--done   .abm-step-label { color: #16a34a; }
-.abm-step-line { flex: 1; height: 1px; background: #e2e8f0; margin: 0 8px; }
+.abm-step-line { flex: 1; height: 2px; background: #e2e8f0; margin: 0 8px; border-radius: 1px; transition: background 0.2s; }
+.abm-step-line--done { background: #16a34a; }
 
 /* Body — scrollable */
 .abm-body {
