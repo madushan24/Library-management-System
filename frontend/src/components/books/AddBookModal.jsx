@@ -155,10 +155,19 @@ export default function AddBookModal({ onClose, onSave }) {
           </div>
 
           <div className="abm-footer">
-            {step>1 && <button type="button" className="abm-back-btn" onClick={()=>{setErrors({});setStep(s=>s-1)}}>Back</button>}
-            <button type="button" className="abm-cancel-btn" onClick={onClose}>Cancel</button>
-            {step<3 ? <button type="button" className="abm-next-btn" onClick={next}>Continue</button>
-                    : <button type="submit" className="abm-save-btn">Add Book</button>}
+            <div className="abm-footer-left">
+              {step > 1 && (
+                <button type="button" className="abm-back-btn" onClick={() => { setErrors({}); setStep(s => s - 1) }}>
+                  Back
+                </button>
+              )}
+            </div>
+            <div className="abm-footer-actions">
+              <button type="button" className="abm-cancel-btn" onClick={onClose}>Cancel</button>
+              {step < 3
+                ? <button type="button" className="abm-next-btn" onClick={next}>Continue</button>
+                : <button type="submit" className="abm-save-btn">Add Book</button>}
+            </div>
           </div>
         </form>
       </div>
