@@ -4,9 +4,11 @@ import './AddBookModal.css'
 const CATS = ['Mathematics','Comp Science','Computing','Engineering','Economics','Software Eng','Physics','Chemistry','Literature','History']
 const LANGS = ['English','Sinhala','Tamil','French','German']
 
-const XI = () => React.createElement('span', null, 'X')
-
-import React from 'react'
+const CheckIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+)
 
 const INIT = { title:'',author:'',isbn:'',category:'',publisher:'',edition:'',year:2026,language:'English',shelf:'',total:1,description:'',status:'AVAILABLE' }
 
@@ -54,13 +56,19 @@ export default function AddBookModal({ onClose, onSave }) {
         </div>
 
         <div className="abm-steps">
-          {['Book Info','Publication','Inventory'].map((s,i) => (
-            <div key={i} className={"abm-step" + (step===i+1?" abm-step--active":step>i+1?" abm-step--done":"")}>
-              <div className="abm-step-num">{step>i+1?'&#10003;':i+1}</div>
-              <span className="abm-step-label">{s}</span>
-              {i<2 && <div className="abm-step-line"/>}
-            </div>
-          ))}
+          {['Book Info', 'Publication', 'Inventory'].map((s, i) => {
+            const done   = step > i + 1
+            const active = step === i + 1
+            return (
+              <div key={i} className={`abm-step${active ? ' abm-step--active' : ''}${done ? ' abm-step--done' : ''}`}>
+                <div className="abm-step-num">
+                  {done ? <CheckIcon /> : i + 1}
+                </div>
+                <span className="abm-step-label">{s}</span>
+                {i < 2 && <div className={`abm-step-line${done ? ' abm-step-line--done' : ''}`} />}
+              </div>
+            )
+          })}
         </div>
 
         <form onSubmit={submit} noValidate>
