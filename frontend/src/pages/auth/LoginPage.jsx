@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authenticate } from '../../constants/auth'
 import './LoginPage.css'
@@ -11,6 +11,15 @@ export default function LoginPage() {
   const [pw, setPw] = useState('')
   const [err, setErr] = useState('')
   const [loading, setLoading] = useState(false)
+
+  /* Read library info saved by Settings page */
+  const libInfo = (() => {
+    try { return JSON.parse(localStorage.getItem('lms_libInfo')) || {} } catch { return {} }
+  })()
+  const libName    = libInfo.name    || 'Public Library PADIYATHALAWA'
+  const finePerDay = (() => {
+    try { return JSON.parse(localStorage.getItem('lms_fines'))?.finePerDay || '1.00' } catch { return '1.00' }
+  })()
 
   const submit = (e) => {
     e.preventDefault()
@@ -54,7 +63,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <h1 className="lp-hero-title">Public Library PADIYATHALAWA</h1>
+              <h1 className="lp-hero-title">{libName}</h1>
               <p className="lp-hero-desc">Manage books, members, borrowing and library operations efficiently.</p>
             </div>
 
@@ -69,7 +78,7 @@ export default function LoginPage() {
               </span>
               <span className="lp-badge">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-                Automated Fine Engine (Rs. 1/ day)
+                Automated Fine Engine (Rs. {finePerDay}/ day)
               </span>
             </div>
 
