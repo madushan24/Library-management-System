@@ -132,6 +132,11 @@ export default function FinesPage() {
   const [collectTarget, setCollect]   = useState(null)
   const [waiveTarget, setWaive]       = useState(null)
 
+  /* Read fine rate from Settings */
+  const fineRate = (() => {
+    try { return JSON.parse(localStorage.getItem('lms_fines'))?.finePerDay || '1.00' } catch { return '1.00' }
+  })()
+
   const totalAmount  = fines.reduce((s, f) => s + f.amount, 0)
   const totalPaid    = fines.filter(f => f.status === 'PAID').reduce((s, f) => s + f.paid, 0)
   const totalUnpaid  = fines.filter(f => f.status === 'UNPAID').reduce((s, f) => s + f.amount, 0)
@@ -170,7 +175,7 @@ export default function FinesPage() {
       <div className="fn-header">
         <div>
           <h2 className="fn-title">Fines</h2>
-          <p className="fn-sub">Track and collect overdue fines &mdash; Rs. 1.00 charged per overdue day</p>
+          <p className="fn-sub">Track and collect overdue fines &mdash; Rs. {fineRate} charged per overdue day</p>
         </div>
       </div>
 
@@ -204,7 +209,7 @@ export default function FinesPage() {
           <div className="fn-stat-icon fn-stat-icon--amber"><ClockIcon /></div>
           <div className="fn-stat-body">
             <div className="fn-stat-label">RATE</div>
-            <div className="fn-stat-val fn-stat-val--amber">Rs. 1.00</div>
+            <div className="fn-stat-val fn-stat-val--amber">Rs. {fineRate}</div>
             <div className="fn-stat-sub">per overdue day</div>
           </div>
         </div>
