@@ -1,26 +1,197 @@
-.rp { display: flex; flex-direction: column; gap: 16px; }
-.rp-title { font-size: 20px; font-weight: 800; color: #1e293b; }
-.rp-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
-.rp-header { display: flex; justify-content: space-between; align-items: flex-start; }
-.rp-export-btns { display: flex; gap: 8px; }
-.rp-btn { display: flex; align-items: center; gap: 6px; padding: 0 14px; height: 36px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all 0.12s; }
-.rp-btn--outline { background: #fff; color: #374151; border: 1.5px solid #e2e8f0; }
-.rp-btn--outline:hover { background: #f8fafc; }
-.rp-btn--primary { background: #1e3a8a; color: #fff; }
+/* Reports Page — rp- prefix — updated with live date filter support */
+.rp {
+  display: flex; flex-direction: column; gap: 16px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
 
-.rp-body { display: grid; grid-template-columns: 200px 1fr; gap: 16px; }
+/* ── Header ── */
+.rp-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+.rp-title  { font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.02em; }
+.rp-sub    { font-size: 12.5px; color: #64748b; margin-top: 3px; }
 
-.rp-sidebar { background: #fff; border-radius: 10px; padding: 16px; border: 1px solid #e8edf5; display: flex; flex-direction: column; gap: 4px; align-self: start; }
-.rp-section-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.10em; color: #94a3b8; text-transform: uppercase; padding: 6px 8px 4px; }
-.rp-type-btn { width: 100%; text-align: left; padding: 8px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 500; color: #475569; background: none; border: none; cursor: pointer; font-family: inherit; transition: background 0.12s; }
-.rp-type-btn:hover { background: #f1f5f9; }
-.rp-type-btn.active { background: #1e3a8a; color: #fff; font-weight: 600; }
+/* ── Export Buttons ── */
+.rp-export-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.rp-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0 16px; height: 37px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  font-family: inherit; border: 1.5px solid transparent;
+  transition: all 0.14s; white-space: nowrap;
+}
+.rp-btn--pdf {
+  background: #fef2f2; color: #dc2626; border-color: #fecaca;
+}
+.rp-btn--pdf:hover { background: #fee2e2; border-color: #fca5a5; }
+.rp-btn--excel {
+  background: #f0fdf4; color: #16a34a; border-color: #bbf7d0;
+}
+.rp-btn--excel:hover { background: #dcfce7; border-color: #86efac; }
+.rp-btn--print {
+  background: #1e3a8a; color: #fff; border-color: #1e3a8a;
+}
+.rp-btn--print:hover { background: #1e40af; }
 
+/* ── Body layout ── */
+.rp-body {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Sidebar ── */
+.rp-sidebar {
+  background: #fff; border-radius: 12px; padding: 14px;
+  border: 1px solid #e8edf5; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  display: flex; flex-direction: column; gap: 3px;
+  position: sticky; top: 16px;
+}
+.rp-section-label {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.10em;
+  color: #94a3b8; text-transform: uppercase;
+  padding: 6px 8px 4px;
+}
+.rp-type-btn {
+  width: 100%; text-align: left; padding: 8px 10px;
+  border-radius: 7px; font-size: 12.5px; font-weight: 500;
+  color: #475569; background: none; border: none;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+  display: flex; align-items: center; gap: 8px;
+}
+.rp-type-btn:hover { background: #f1f5f9; color: #1e293b; }
+.rp-type-btn.active {
+  background: #1e3a8a; color: #fff; font-weight: 600;
+}
+.rp-type-icon { font-size: 14px; line-height: 1; }
+.rp-divider { height: 1px; background: #f1f5f9; margin: 8px 0; }
+
+.rp-sidebar-meta { padding: 4px 8px; display: flex; flex-direction: column; gap: 6px; }
+.rp-meta-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11.5px; color: #64748b;
+}
+.rp-meta-row strong { color: #1e293b; font-size: 11.5px; }
+
+/* ── Main Area ── */
 .rp-main { display: flex; flex-direction: column; gap: 14px; }
-.rp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.rp-stat { background: #fff; border-radius: 10px; padding: 16px; border: 1px solid #e8edf5; }
-.rp-stat-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; }
-.rp-stat-val { font-size: 22px; font-weight: 800; color: #1e293b; }
 
-.rp-chart-card { background: #fff; border-radius: 10px; padding: 20px; border: 1px solid #e8edf5; }
-.rp-chart-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+.rp-report-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fff; border-radius: 10px; padding: 14px 18px;
+  border: 1px solid #e8edf5; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.rp-report-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 15px; font-weight: 700; color: #1e293b;
+}
+.rp-report-icon { font-size: 18px; }
+.rp-report-period {
+  font-size: 11.5px; font-weight: 600; color: #1e3a8a;
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 5px; padding: 3px 10px;
+}
+
+/* ── KPI Cards ── */
+.rp-kpis {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.rp-kpi {
+  background: #fff; border-radius: 10px; padding: 14px 16px;
+  border: 1px solid #e8edf5; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  display: flex; align-items: center; gap: 12px;
+}
+.rp-kpi-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.rp-kpi-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+.rp-kpi-val   { font-size: 21px; font-weight: 800; color: #1e293b; line-height: 1; }
+
+.rp-kpi--blue   { } .rp-kpi-icon--blue   { background: #eff6ff; color: #2563eb; }
+.rp-kpi--green  { } .rp-kpi-icon--green  { background: #f0fdf4; color: #16a34a; }
+.rp-kpi--red    { } .rp-kpi-icon--red    { background: #fef2f2; color: #ef4444; }
+.rp-kpi--amber  { } .rp-kpi-icon--amber  { background: #fffbeb; color: #d97706; }
+.rp-kpi--indigo { } .rp-kpi-icon--indigo { background: #f5f3ff; color: #7c3aed; }
+.rp-kpi--slate  { } .rp-kpi-icon--slate  { background: #f8fafc; color: #475569; }
+
+/* ── Chart Cards ── */
+.rp-charts-row { display: grid; grid-template-columns: 1fr 300px; gap: 14px; }
+.rp-chart-card {
+  background: #fff; border-radius: 10px; padding: 18px 20px;
+  border: 1px solid #e8edf5; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.rp-chart-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.rp-chart-title { font-size: 13.5px; font-weight: 700; color: #1e293b; }
+.rp-chart-legend {
+  display: flex; align-items: center; gap: 14px; font-size: 11.5px; color: #64748b;
+}
+.rp-leg-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px;
+}
+
+/* Pie legend */
+.rp-pie-legend { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.rp-pie-row    { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #475569; }
+.rp-pie-name   { flex: 1; }
+.rp-pie-val    { font-weight: 700; color: #1e293b; }
+
+/* ── Table Card ── */
+.rp-table-card {
+  background: #fff; border-radius: 10px;
+  border: 1px solid #e8edf5; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.rp-table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid #f1f5f9;
+}
+.rp-table-title { font-size: 13.5px; font-weight: 700; color: #1e293b; }
+.rp-table-badge {
+  font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 3px 10px;
+}
+.rp-table-badge--red  { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+.rp-table-badge--blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+
+.rp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.rp-table th {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8;
+  text-transform: uppercase; padding: 10px 16px; text-align: left;
+  background: #fafbfc; border-bottom: 1px solid #f1f5f9; white-space: nowrap;
+}
+.rp-table td { padding: 11px 16px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+.rp-table tr:last-child td { border-bottom: none; }
+.rp-table tr:hover td { background: #f8faff; }
+
+.rp-id       { font-size: 11.5px; font-weight: 700; }
+.rp-id--blue { color: #2563eb; }
+.rp-cell-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.rp-cell-sub  { font-size: 10.5px; color: #94a3b8; margin-top: 1px; }
+.rp-cell-book { font-size: 12px; color: #1e293b; max-width: 260px; }
+.rp-cell-date { font-size: 12px; color: #64748b; white-space: nowrap; }
+.rp-days-red  { font-size: 12.5px; font-weight: 700; color: #ef4444; }
+.rp-fine-red  { font-size: 12.5px; font-weight: 700; color: #ef4444; }
+
+/* Rank badges */
+.rp-rank { font-size: 11.5px; font-weight: 700; border-radius: 5px; padding: 3px 9px; }
+.rp-rank--1     { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+.rp-rank--2     { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.rp-rank--3     { background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; }
+.rp-rank--other { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+/* Progress bar in popular books */
+.rp-bar-wrap {
+  display: flex; align-items: center; gap: 8px; min-width: 140px;
+  position: relative; background: #f1f5f9; border-radius: 4px; height: 18px; overflow: hidden;
+}
+.rp-bar-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+  border-radius: 4px; transition: width 0.3s ease;
+}
+.rp-bar-label {
+  position: relative; font-size: 11px; font-weight: 700; color: #1e3a8a;
+  padding: 0 8px; z-index: 1;
+}
