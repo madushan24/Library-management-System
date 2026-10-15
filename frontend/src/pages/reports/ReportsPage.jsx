@@ -1,4 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
 import {
   BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -112,33 +114,82 @@ function exportCSV(reportKey, data) {
   URL.revokeObjectURL(url)
 }
 
-function exportPDF(reportRef, reportLabel, dateFilter) {
-  const html = reportRef.current?.innerHTML || ''
-  const win  = window.open('', '_blank', 'width=960,height=700')
-  win.document.write(`<!DOCTYPE html><html><head><title>LMS Report — ${reportLabel}</title><style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;font-size:12px;color:#1e293b;padding:28px}
-    h2{font-size:18px;font-weight:800;margin-bottom:2px}p{font-size:11px;color:#64748b}
-    .rp-pdf-top{border-bottom:2px solid #1e3a8a;padding-bottom:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end}
-    .rp-pdf-logo{font-size:16px;font-weight:800;color:#1e3a8a}
-    table{width:100%;border-collapse:collapse;margin-top:14px}
-    th{background:#1e3a8a;color:#fff;padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
-    td{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:11px}
-    tr:nth-child(even) td{background:#f8fafc}
-    .rp-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-    .rp-kpi-box{border:1px solid #e2e8f0;border-radius:8px;padding:12px}
-    .rp-kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:4px}
-    .rp-kpi-v{font-size:20px;font-weight:800;color:#1e293b}
-    @media print{body{padding:0}}
-  </style></head><body>
-    <div class="rp-pdf-top">
-      <div><div class="rp-pdf-logo">📚 Library Management System</div>
-        <p>Report: ${reportLabel} &nbsp;|&nbsp; Period: ${dateFilter} &nbsp;|&nbsp; Generated: ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</p></div>
-    </div>
-    ${html}
-  </body></html>`)
-  win.document.close(); win.focus()
-  setTimeout(() => { win.print(); win.close() }, 500)
+async function exportPDF(reportRef, reportKey, reportLabel, dateFilter) {
+  const el = reportRef.current
+  if (!el) return
+
+  /* ── Snapshot the live report panel (charts + tables) ── */
+  const canvas = await html2canvas(el, {
+    scale: 2,                  // retina sharpness
+    useCORS: true,
+    backgroundColor: '#f8fafc',
+    logging: false,
+  })
+
+  const imgData   = canvas.toDataURL('image/png')
+  const doc       = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+  const pageW     = doc.internal.pageSize.getWidth()
+  const pageH     = doc.internal.pageSize.getHeight()
+  const headerH   = 38   // branded header height
+  const footerH   = 24
+  const margin    = 0
+  const printW    = pageW - margin * 2
+  const maxImgH   = pageH - headerH - footerH   // usable height per page
+
+  /* ── Branded header (drawn on every page) ── */
+  function drawHeader() {
+    doc.setFillColor(30, 58, 138)
+    doc.rect(0, 0, pageW, headerH, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(14)
+    doc.setTextColor(255, 255, 255)
+    doc.text('📚  Library Management System', 16, 26)
+  }
+
+  /* ── Footer ── */
+  function drawFooter(pageNum, total) {
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7)
+    doc.setTextColor(148, 163, 184)
+    doc.text(
+      `Page ${pageNum} of ${total}   •   Library Management System   •   Confidential`,
+      16,
+      pageH - 8
+    )
+  }
+
+  /* ── Slice the canvas across multiple pages if tall ── */
+  const imgW       = canvas.width
+  const imgH       = canvas.height
+  // how many canvas-px fit in one page's usable area
+  const sliceH     = Math.floor((maxImgH / printW) * imgW)
+  const totalPages = Math.ceil(imgH / sliceH)
+
+  for (let page = 0; page < totalPages; page++) {
+    if (page > 0) doc.addPage()
+    drawHeader()
+
+    // crop a horizontal band of the canvas into a temp canvas
+    const srcY       = page * sliceH
+    const srcActualH = Math.min(sliceH, imgH - srcY)
+    const tmpCanvas  = document.createElement('canvas')
+    tmpCanvas.width  = imgW
+    tmpCanvas.height = srcActualH
+    const ctx = tmpCanvas.getContext('2d')
+    const srcImg = new Image()
+    srcImg.src = imgData
+    // draw the slice synchronously (image already decoded)
+    await new Promise(res => { srcImg.onload = res; if (srcImg.complete) res() })
+    ctx.drawImage(srcImg, 0, srcY, imgW, srcActualH, 0, 0, imgW, srcActualH)
+
+    const sliceData   = tmpCanvas.toDataURL('image/png')
+    const renderedH   = (srcActualH / imgW) * printW
+    doc.addImage(sliceData, 'PNG', margin, headerH, printW, renderedH)
+
+    drawFooter(page + 1, totalPages)
+  }
+
+  doc.save(`LMS_${reportKey}_report.pdf`)
 }
 
 function handlePrint(reportRef, reportLabel, dateFilter) {
@@ -535,7 +586,7 @@ export default function ReportsPage() {
           </p>
         </div>
         <div className="rp-export-btns">
-          <button className="rp-btn rp-btn--pdf"   onClick={() => exportPDF(reportRef, currentReport?.label, periodLabel)}>
+          <button className="rp-btn rp-btn--pdf"   onClick={() => exportPDF(reportRef, activeReport, currentReport?.label, periodLabel)}>
             <FileTextIcon /> Export PDF
           </button>
           <button className="rp-btn rp-btn--excel" onClick={() => exportCSV(activeReport, data)}>
