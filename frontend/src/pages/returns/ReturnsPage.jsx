@@ -60,6 +60,154 @@ const SearchIcon      = () => <svg width="15" height="15" viewBox="0 0 24 24" fi
 const UserIcon        = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 const XIcon           = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 const RotateCCWIcon   = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+const CalIcon         = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+const BookIcon2       = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+const HashIcon        = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+
+/* ─── Overdue Detail Modal ─── */
+function OverdueDetailModal({ loan, onClose, onProcessReturn }) {
+  const fi = calcFine(loan.due)
+  // look up member from MEMBERS_DB by memberId
+  const mem = Object.values(MEMBERS_DB).find(m => m.id === loan.memberId)
+  const daysBadgeColor = fi.days >= 14 ? '#ef4444' : fi.days >= 7 ? '#ea580c' : '#d97706'
+
+  return (
+    <div className="ret-modal-backdrop" onClick={onClose}>
+      <div className="ret-modal ret-modal--detail" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="ret-modal-header ret-modal-header--overdue">
+          <div>
+            <h3 className="ret-modal-title">Overdue Book — Full Details</h3>
+            <p className="ret-modal-sub">Borrow record {loan.id} · {loan.memberId}</p>
+          </div>
+          <button className="ret-modal-close" onClick={onClose}><XIcon /></button>
+        </div>
+
+        <div className="ret-modal-body">
+
+          {/* Overdue status banner */}
+          <div className="ret-od-banner">
+            <AlertIcon />
+            <div>
+              <div className="ret-od-banner-title">
+                {fi.days} day{fi.days !== 1 ? 's' : ''} overdue — Fine accruing
+              </div>
+              <div className="ret-od-banner-sub">
+                Rs. {FINE_PER_DAY}.00 per day · Total fine: <strong style={{color:'#ef4444'}}>Rs. {fi.fine}.00</strong>
+              </div>
+            </div>
+            <span className="ret-od-days-pill" style={{background: daysBadgeColor}}>
+              {fi.days}d Late
+            </span>
+          </div>
+
+          {/* Details grid */}
+          <div className="ret-od-grid">
+
+            {/* Book Section */}
+            <div className="ret-od-section">
+              <div className="ret-od-section-title"><BookIcon2 /> Book Information</div>
+              <div className="ret-od-rows">
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Book Title</span>
+                  <strong className="ret-od-val">{loan.title}</strong>
+                </div>
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Accession No.</span>
+                  <strong className="ret-od-val ret-od-mono">{loan.acc}</strong>
+                </div>
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Borrow Record ID</span>
+                  <strong className="ret-od-val ret-od-mono">{loan.id}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Member Section */}
+            <div className="ret-od-section">
+              <div className="ret-od-section-title"><UserIcon /> Member Information</div>
+              <div className="ret-od-rows">
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Member Name</span>
+                  <strong className="ret-od-val">{mem ? mem.name : loan.memberId}</strong>
+                </div>
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Member ID</span>
+                  <strong className="ret-od-val ret-od-mono">{loan.memberId}</strong>
+                </div>
+                {mem && (
+                  <div className="ret-od-row">
+                    <span className="ret-od-label">Phone</span>
+                    <strong className="ret-od-val">{mem.phone}</strong>
+                  </div>
+                )}
+                {mem && (
+                  <div className="ret-od-row">
+                    <span className="ret-od-label">Status</span>
+                    <span className="ret-od-status-pill">{mem.status}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Dates Section */}
+            <div className="ret-od-section">
+              <div className="ret-od-section-title"><CalIcon /> Dates &amp; Timeline</div>
+              <div className="ret-od-rows">
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Issue Date</span>
+                  <strong className="ret-od-val">{fmtISO(loan.issued)}</strong>
+                </div>
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Due Date</span>
+                  <strong className="ret-od-val" style={{color:'#ef4444'}}>{fmtISO(loan.due)}</strong>
+                </div>
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Today (Return Date)</span>
+                  <strong className="ret-od-val">{todayDisplay()}</strong>
+                </div>
+                <div className="ret-od-row">
+                  <span className="ret-od-label">Days Overdue</span>
+                  <strong className="ret-od-val" style={{color: daysBadgeColor}}>
+                    {fi.days} day{fi.days !== 1 ? 's' : ''}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Fine Section */}
+            <div className="ret-od-section ret-od-section--fine">
+              <div className="ret-od-section-title"><CoinsIcon /> Fine Summary</div>
+              <div className="ret-od-fine-box">
+                <div className="ret-od-fine-calc">
+                  <span>{fi.days} days</span>
+                  <span className="ret-od-op">×</span>
+                  <span>Rs. {FINE_PER_DAY}.00/day</span>
+                  <span className="ret-od-op">=</span>
+                  <span className="ret-od-fine-total">Rs. {fi.fine}.00</span>
+                </div>
+                <div className="ret-od-fine-note">Fine continues to accrue at Rs. {FINE_PER_DAY}/day until returned</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div className="ret-modal-footer">
+          <button className="ret-btn ret-btn--ghost" onClick={onClose}>Close</button>
+          <button
+            className="ret-btn ret-btn--primary"
+            onClick={() => { onClose(); onProcessReturn(loan) }}
+          >
+            <RotateCCWIcon /> Process Return for this Book
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 /* ─── Sidebar: Recent Returns list ─── */
 function RecentReturnsList({ records }) {
@@ -96,7 +244,7 @@ function RecentReturnsList({ records }) {
 }
 
 /* ─── Sidebar: Overdue list ─── */
-function OverdueList({ loans }) {
+function OverdueList({ loans, onViewDetail }) {
   const overdue = loans.filter(l => l.status === 'OVERDUE')
   return (
     <div className="ret-panel ret-panel--overdue">
@@ -104,21 +252,33 @@ function OverdueList({ loans }) {
         <h3 className="ret-panel-title">Overdue Books</h3>
         <span className="ret-panel-badge ret-panel-badge--red">{overdue.length} overdue</span>
       </div>
+      <p className="ret-panel-click-hint">↓ Click any item to view full details</p>
       <div className="ret-panel-body">
         {overdue.length === 0
           ? <p className="ret-panel-empty">No overdue books! 🎉</p>
           : overdue.map(l => {
             const fi = calcFine(l.due)
+            const sev = fi.days >= 14 ? 'red' : fi.days >= 7 ? 'orange' : 'yellow'
             return (
-              <div key={l.id} className="ret-panel-item ret-panel-item--overdue">
+              <div
+                key={l.id}
+                className="ret-panel-item ret-panel-item--overdue ret-panel-item--clickable"
+                onClick={() => onViewDetail(l)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && onViewDetail(l)}
+              >
                 <div className="ret-panel-item-top">
                   <span className="ret-panel-id">{l.id}</span>
-                  <span className="ret-panel-overdue-badge">{fi.days}d overdue</span>
+                  <span className={`ret-panel-overdue-badge ret-panel-overdue-badge--${sev}`}>
+                    {fi.days}d overdue
+                  </span>
                 </div>
                 <div className="ret-panel-book">{l.title}</div>
                 <div className="ret-panel-meta">{l.memberId} &bull; Due: {fmtISO(l.due)}</div>
                 <div className="ret-panel-dates">
-                  <span className="ret-panel-fine">Fine accruing: Rs.{fi.fine}</span>
+                  <span className="ret-panel-fine">Fine: Rs. {fi.fine}.00</span>
+                  <span className="ret-panel-view-hint">View details →</span>
                 </div>
               </div>
             )
@@ -141,6 +301,7 @@ export default function ReturnsPage() {
   const [condition, setCondition] = useState('Good')
   const [success, setSuccess]     = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [detailLoan, setDetailLoan] = useState(null)   // overdue detail modal
 
   // history table filters
   const [search, setSearch]           = useState('')
@@ -312,7 +473,10 @@ export default function ReturnsPage() {
       {/* Two-column panels */}
       <div className="ret-panels-row">
         <RecentReturnsList records={history} />
-        <OverdueList loans={loans} />
+        <OverdueList
+          loans={loans}
+          onViewDetail={loan => setDetailLoan(loan)}
+        />
       </div>
 
       {/* Return history table */}
@@ -537,6 +701,27 @@ export default function ReturnsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Overdue Detail Modal */}
+      {detailLoan && (
+        <OverdueDetailModal
+          loan={detailLoan}
+          onClose={() => setDetailLoan(null)}
+          onProcessReturn={(loan) => {
+            // Pre-fill step 2: find member and jump directly to book selection
+            const mem = Object.values(MEMBERS_DB).find(m => m.id === loan.memberId)
+            if (mem) {
+              setMember(mem)
+              setPhone(mem.phone)
+              setStep(2)
+              setShowModal(true)
+            } else {
+              setStep(1)
+              setShowModal(true)
+            }
+          }}
+        />
       )}
 
     </div>
