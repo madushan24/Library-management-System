@@ -291,3 +291,110 @@
 .ret-success-ontime     { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 24px; margin-bottom: 20px; font-size: 13px; font-weight: 600; color: #16a34a; }
 .ret-new-btn { padding: 0 24px; height: 40px; background: #16a34a; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .ret-new-btn:hover { background: #15803d; }
+
+/* ─── Clickable overdue panel items ─── */
+.ret-panel-item--clickable {
+  cursor: pointer;
+  transition: transform 0.13s, box-shadow 0.13s, border-color 0.13s;
+}
+.ret-panel-item--clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239,68,68,0.14);
+  border-color: #fca5a5;
+}
+.ret-panel-item--clickable:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+/* Click hint subtitle */
+.ret-panel-click-hint {
+  font-size: 10.5px; color: #94a3b8; padding: 4px 12px 2px;
+  font-style: italic;
+}
+
+/* View details hint inside item */
+.ret-panel-view-hint {
+  font-size: 11px; font-weight: 600;
+  color: var(--ac, #1e3a8a); opacity: 0.8;
+}
+.ret-panel-item--clickable:hover .ret-panel-view-hint { opacity: 1; }
+
+/* Severity badge variants */
+.ret-panel-overdue-badge {
+  font-size: 10px; font-weight: 700; border-radius: 20px; padding: 2px 8px;
+}
+.ret-panel-overdue-badge--red    { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+.ret-panel-overdue-badge--orange { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+.ret-panel-overdue-badge--yellow { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+
+/* ─── Overdue Detail Modal ─── */
+.ret-modal--detail { max-width: 680px; width: 96%; }
+
+.ret-modal-header--overdue {
+  background: linear-gradient(135deg, #fef2f2, #fff5f5);
+  border-bottom: 1px solid #fecaca;
+}
+.ret-modal-header--overdue .ret-modal-title { color: #b91c1c; }
+.ret-modal-header--overdue .ret-modal-sub   { color: #ef4444; }
+
+/* Overdue status banner */
+.ret-od-banner {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 20px; color: #b91c1c;
+}
+.ret-od-banner svg { flex-shrink: 0; margin-top: 2px; }
+.ret-od-banner-title { font-size: 14px; font-weight: 700; color: #b91c1c; margin-bottom: 3px; }
+.ret-od-banner-sub   { font-size: 12.5px; color: #ef4444; }
+.ret-od-days-pill {
+  margin-left: auto; flex-shrink: 0;
+  color: #fff; font-size: 11px; font-weight: 800;
+  border-radius: 20px; padding: 4px 12px; white-space: nowrap;
+}
+
+/* Detail grid — 2 columns */
+.ret-od-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+@media (max-width: 560px) { .ret-od-grid { grid-template-columns: 1fr; } }
+
+.ret-od-section {
+  background: #f8fafc; border: 1px solid #e8edf5;
+  border-radius: 10px; padding: 14px 16px;
+}
+.ret-od-section--fine {
+  grid-column: 1 / -1;
+  background: #fff7ed; border-color: #fed7aa;
+}
+.ret-od-section-title {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #64748b;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid #e8edf5;
+}
+.ret-od-section--fine .ret-od-section-title { border-color: #fed7aa; color: #92400e; }
+
+.ret-od-rows { display: flex; flex-direction: column; gap: 9px; }
+.ret-od-row  { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ret-od-label { font-size: 11.5px; color: #94a3b8; flex-shrink: 0; }
+.ret-od-val   { font-size: 12.5px; font-weight: 600; color: #1e293b; text-align: right; }
+.ret-od-mono  { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 11.5px; }
+
+.ret-od-status-pill {
+  font-size: 10px; font-weight: 700;
+  background: #f0fdf4; color: #16a34a;
+  border: 1px solid #bbf7d0; border-radius: 20px;
+  padding: 2px 9px;
+}
+
+/* Fine calculator */
+.ret-od-fine-box { background: #fff; border-radius: 8px; padding: 14px 16px; border: 1px solid #fed7aa; }
+.ret-od-fine-calc {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 8px;
+}
+.ret-od-op         { color: #94a3b8; font-weight: 400; font-size: 14px; }
+.ret-od-fine-total { color: #ef4444; font-size: 20px; font-weight: 800; }
+.ret-od-fine-note  { font-size: 11.5px; color: #92400e; }

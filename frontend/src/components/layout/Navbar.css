@@ -169,3 +169,22 @@
   align-items: center;
   justify-content: center;
 }
+
+.navbar-notif-wrap {
+  position: relative;
+}
+
+.navbar-icon-btn--active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.navbar-user-wrap {
+  position: relative;
+}
+
+.navbar-user--active {
+  background: #f8fafc;
+  border-color: #bfdbfe;
+}
