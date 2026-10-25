@@ -1,64 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BORROWINGS, MEMBERS, BOOKS, FINE_PAYMENTS, formatDate } from '../../data/libraryData'
+import { api } from '../../api/client'
 import './NotificationPanel.css'
 
-/* ─── Build notifications from live data ─── */
-function buildNotifications() {
-  const notifs = []
-
-  BORROWINGS.forEach(b => {
-    const member = MEMBERS[b.memberId]?.name || b.memberId
-    const book   = BOOKS[b.accNo]?.title     || b.accNo
-
-    if (b.status === 'OVERDUE') {
-      notifs.push({
-        id:      `notif-overdue-${b.id}`,
-        type:    'overdue',
-        title:   'Overdue Book',
-        message: `${member} — "${book}"`,
-        detail:  `${b.overdueDays} days overdue · Fine: Rs. ${b.fine}.00`,
-        time:    formatDate(b.dueDate),
-        route:   '/borrowings',
-        read:    false,
-      })
-    }
-
-    if (b.fine > 0) {
-      const pmt = FINE_PAYMENTS[b.id]
-      if (pmt && pmt.status === 'UNPAID') {
-        notifs.push({
-          id:      `notif-fine-${b.id}`,
-          type:    'fine',
-          title:   'Unpaid Fine',
-          message: `${member} owes Rs. ${b.fine}.00`,
-          detail:  `${b.id} · Book: "${book}"`,
-          time:    formatDate(b.dueDate),
-          route:   '/fines',
-          read:    false,
-        })
-      }
-    }
-
-    if (b.status === 'BORROWED') {
-      notifs.push({
-        id:      `notif-borrowed-${b.id}`,
-        type:    'borrowed',
-        title:   'Active Borrowing',
-        message: `${member} — "${book}"`,
-        detail:  `Due: ${formatDate(b.dueDate)}`,
-        time:    formatDate(b.issuedDate),
-        route:   '/borrowings',
-        read:    true,
-      })
-    }
-  })
-
-  // sort: unread first, then by id desc
-  return notifs.sort((a, b) => {
-    if (a.read !== b.read) return a.read ? 1 : -1
-    return b.id.localeCompare(a.id)
-  })
+function formatDate(iso) {
+  if (!iso) return '—'
+  const [y, m, d] = iso.split('-')
+  return y && m && d ? `${d}/${m}/${y}` : iso
 }
 
 const ICONS = {
@@ -70,8 +18,8 @@ const ICONS = {
 export default function NotificationPanel({ onClose }) {
   const panelRef = useRef(null)
   const navigate = useNavigate()
-  const notifications = buildNotifications()
-  const unread = notifications.filter(n => !n.read).length
+  const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(true)
 
   /* close on outside click */
   useEffect(() => {
@@ -83,6 +31,83 @@ export default function NotificationPanel({ onClose }) {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [onClose])
+
+  /* fetch notifications from live backend */
+  useEffect(() => {
+    let active = true
+
+    async function fetchNotifications() {
+      try {
+        const [borrows, fines] = await Promise.all([
+          api.getBorrowings().catch(() => []),
+          api.getFines().catch(() => [])
+        ])
+
+        if (!active) return
+
+        const notifs = []
+
+        // Overdue borrowings
+        borrows.filter(b => b.status === 'OVERDUE').forEach(b => {
+          notifs.push({
+            id:      `notif-overdue-${b.id}`,
+            type:    'overdue',
+            title:   'Overdue Book',
+            message: `${b.member_name || 'Member'} — "${b.book_title || 'Book'}"`,
+            detail:  `${b.overdue_days || 0} days overdue · Fine: Rs. ${b.fine || 0}.00`,
+            time:    formatDate(b.due_date),
+            route:   '/borrowings',
+            read:    false,
+          })
+        })
+
+        // Unpaid fines
+        fines.filter(f => f.status === 'UNPAID').forEach(f => {
+          notifs.push({
+            id:      `notif-fine-${f.id}`,
+            type:    'fine',
+            title:   'Unpaid Fine',
+            message: `${f.member_name || 'Member'} owes Rs. ${f.amount || 0}.00`,
+            detail:  `${f.borrow_id || 'Loan'} · Book: "${f.book_title || 'Book'}"`,
+            time:    formatDate(f.due_date || f.returned_date),
+            route:   '/fines',
+            read:    false,
+          })
+        })
+
+        // Active borrowings
+        borrows.filter(b => b.status === 'BORROWED').slice(0, 10).forEach(b => {
+          notifs.push({
+            id:      `notif-borrowed-${b.id}`,
+            type:    'borrowed',
+            title:   'Active Borrowing',
+            message: `${b.member_name || 'Member'} — "${b.book_title || 'Book'}"`,
+            detail:  `Due: ${formatDate(b.due_date)}`,
+            time:    formatDate(b.borrow_date),
+            route:   '/borrowings',
+            read:    true,
+          })
+        })
+
+        // sort: unread first, then by id desc
+        notifs.sort((a, b) => {
+          if (a.read !== b.read) return a.read ? 1 : -1
+          return b.id.localeCompare(a.id)
+        })
+
+        setNotifications(notifs)
+      } catch (err) {
+        console.error('Failed to load notifications:', err)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    fetchNotifications()
+    return () => { active = false }
+  }, [])
+
+  const unread = notifications.filter(n => !n.read).length
 
   function handleItemClick(route) {
     onClose()
@@ -102,7 +127,11 @@ export default function NotificationPanel({ onClose }) {
 
       {/* List */}
       <div className="np-list">
-        {notifications.length === 0 ? (
+        {loading ? (
+          <div className="np-empty">
+            <div>Loading notifications...</div>
+          </div>
+        ) : notifications.length === 0 ? (
           <div className="np-empty">
             <div className="np-empty-icon">🔔</div>
             <div>No notifications</div>
