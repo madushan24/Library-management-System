@@ -1,15 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { api } from '../../api/client'
 import './FinesPage.css'
-
-const initialFines = [
-  { id: 'FN-001', borrowId: 'BR-002', member: 'N.S. Fernando',   memberId: 'MEM-112', phone: '071 882 3891', book: 'Engineering Mechanics: Statics',           days: 10, amount: 10, paid: 0,  method: '-',    date: '15/09/2026', status: 'UNPAID' },
-  { id: 'FN-002', borrowId: 'BR-005', member: 'K.M. Bandara',    memberId: 'MEM-342', phone: '077 234 5678', book: 'Data Structures in C++ (2nd Ed)',           days: 14, amount: 14, paid: 14, method: 'Cash', date: '14/09/2026', status: 'PAID'   },
-  { id: 'FN-003', borrowId: 'BR-008', member: 'Sahan Alwis',     memberId: 'MEM-404', phone: '078 991 4455', book: 'Digital Signal Processing Concepts',        days: 7,  amount: 7,  paid: 0,  method: '-',    date: '13/09/2026', status: 'UNPAID' },
-  { id: 'FN-004', borrowId: 'BR-011', member: 'Dilani Wickrama', memberId: 'MEM-084', phone: '071 987 6543', book: 'Modern Operating Systems (4th Ed)',          days: 3,  amount: 3,  paid: 3,  method: 'Card', date: '10/09/2026', status: 'WAIVED' },
-  { id: 'FN-005', borrowId: 'BR-009', member: 'Kasun Perera',    memberId: 'MEM-881', phone: '076 554 1122', book: 'Discrete Mathematics & Its Applications',   days: 6,  amount: 6,  paid: 6,  method: 'Cash', date: '14/08/2026', status: 'PAID'   },
-  { id: 'FN-006', borrowId: 'BR-017', member: 'N.S. Fernando',   memberId: 'MEM-112', phone: '071 882 3891', book: 'Algorithm Design: Foundations Vol. II',     days: 8,  amount: 8,  paid: 0,  method: '-',    date: '20/06/2026', status: 'UNPAID' },
-  { id: 'FN-007', borrowId: 'BR-004', member: 'Sahan Alwis',     memberId: 'MEM-404', phone: '078 991 4455', book: 'Microelectronic Circuits',                  days: 5,  amount: 5,  paid: 5,  method: 'Card', date: '05/09/2026', status: 'PAID'   },
-]
 
 const STATUS_STYLE = {
   UNPAID: { color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
@@ -89,7 +80,7 @@ function CollectModal({ fine, onClose, onCollect }) {
         </div>
         <div className="fn-modal-footer">
           <button className="fn-modal-ghost" onClick={onClose}>Cancel</button>
-          <button className="fn-modal-confirm" onClick={() => onCollect(fine.id, method)}>
+          <button className="fn-modal-confirm" onClick={() => onCollect(fine.borrowId || fine.borrow_id, method)}>
             Confirm — Rs. {fine.amount}.00
           </button>
         </div>
@@ -115,7 +106,7 @@ function WaiveModal({ fine, onClose, onWaive }) {
         </div>
         <div className="fn-modal-footer">
           <button className="fn-modal-ghost" onClick={onClose}>Cancel</button>
-          <button className="fn-modal-waive" onClick={() => onWaive(fine.id)}>
+          <button className="fn-modal-waive" onClick={() => onWaive(fine.borrowId || fine.borrow_id)}>
             Yes, Waive Fine
           </button>
         </div>
@@ -126,16 +117,44 @@ function WaiveModal({ fine, onClose, onWaive }) {
 
 /* ── Main Page ── */
 export default function FinesPage() {
-  const [fines, setFines]             = useState(initialFines)
+  const [fines, setFines]             = useState([])
+  const [loading, setLoading]         = useState(true)
   const [search, setSearch]           = useState('')
   const [statusFilter, setStatus]     = useState('All Status')
   const [collectTarget, setCollect]   = useState(null)
   const [waiveTarget, setWaive]       = useState(null)
 
-  /* Read fine rate from Settings */
-  const fineRate = (() => {
-    try { return JSON.parse(localStorage.getItem('lms_fines'))?.finePerDay || '1.00' } catch { return '1.00' }
-  })()
+  const loadFines = useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await api.getFines()
+      const formatted = data.map(f => ({
+        id:       `FN-${String(f.id).padStart(3, '0')}`,
+        dbId:     f.id,
+        borrowId: f.borrow_id,
+        borrow_id:f.borrow_id,
+        member:   f.member_name || 'Member',
+        memberId: f.mem_id || 'MEM',
+        phone:    f.phone || '-',
+        book:     f.book_title || 'Book',
+        days:     f.days || 0,
+        amount:   f.amount || 0,
+        paid:     f.status === 'PAID' ? f.amount : 0,
+        method:   f.method || '-',
+        date:     f.paid_date || f.returned_date || f.due_date || '-',
+        status:   f.status || 'UNPAID',
+      }))
+      setFines(formatted)
+    } catch (err) {
+      console.error('Failed to load fines:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadFines()
+  }, [loadFines])
 
   const totalAmount  = fines.reduce((s, f) => s + f.amount, 0)
   const totalPaid    = fines.filter(f => f.status === 'PAID').reduce((s, f) => s + f.paid, 0)
@@ -145,27 +164,33 @@ export default function FinesPage() {
   const filtered = fines.filter(f => {
     const q = search.toLowerCase()
     const matchSearch =
-      f.id.toLowerCase().includes(q) ||
-      f.borrowId.toLowerCase().includes(q) ||
-      f.member.toLowerCase().includes(q) ||
-      f.memberId.toLowerCase().includes(q) ||
-      f.book.toLowerCase().includes(q)
+      (f.id || '').toLowerCase().includes(q) ||
+      (f.borrowId || '').toLowerCase().includes(q) ||
+      (f.member || '').toLowerCase().includes(q) ||
+      (f.memberId || '').toLowerCase().includes(q) ||
+      (f.book || '').toLowerCase().includes(q)
     const matchStatus = statusFilter === 'All Status' || f.status === statusFilter
     return matchSearch && matchStatus
   })
 
-  const handleCollect = (id, method) => {
-    setFines(prev => prev.map(f =>
-      f.id === id ? { ...f, status: 'PAID', paid: f.amount, method } : f
-    ))
-    setCollect(null)
+  const handleCollect = async (borrowId, method) => {
+    try {
+      await api.payFine(borrowId, { method })
+      await loadFines()
+      setCollect(null)
+    } catch (err) {
+      alert(err.message || 'Failed to process fine payment')
+    }
   }
 
-  const handleWaive = (id) => {
-    setFines(prev => prev.map(f =>
-      f.id === id ? { ...f, status: 'WAIVED', method: 'Waived' } : f
-    ))
-    setWaive(null)
+  const handleWaive = async (borrowId) => {
+    try {
+      await api.waiveFine(borrowId)
+      await loadFines()
+      setWaive(null)
+    } catch (err) {
+      alert(err.message || 'Failed to waive fine')
+    }
   }
 
   return (
@@ -175,7 +200,7 @@ export default function FinesPage() {
       <div className="fn-header">
         <div>
           <h2 className="fn-title">Fines</h2>
-          <p className="fn-sub">Track and collect overdue fines &mdash; Rs. {fineRate} charged per overdue day</p>
+          <p className="fn-sub">Track and collect overdue fines &mdash; Rs. 1.00 charged per overdue day</p>
         </div>
       </div>
 
@@ -209,7 +234,7 @@ export default function FinesPage() {
           <div className="fn-stat-icon fn-stat-icon--amber"><ClockIcon /></div>
           <div className="fn-stat-body">
             <div className="fn-stat-label">RATE</div>
-            <div className="fn-stat-val fn-stat-val--amber">Rs. {fineRate}</div>
+            <div className="fn-stat-val fn-stat-val--amber">Rs. 1.00</div>
             <div className="fn-stat-sub">per overdue day</div>
           </div>
         </div>
@@ -238,86 +263,90 @@ export default function FinesPage() {
 
       {/* Table */}
       <div className="fn-card">
-        <table className="fn-table">
-          <thead>
-            <tr>
-              <th>FINE ID</th>
-              <th>BORROW ID</th>
-              <th>MEMBER</th>
-              <th>BOOK</th>
-              <th>PHONE</th>
-              <th>OVERDUE DAYS</th>
-              <th>AMOUNT</th>
-              <th>PAID</th>
-              <th>METHOD</th>
-              <th>DATE</th>
-              <th>STATUS</th>
-              <th>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
+        {loading ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading fine records...</div>
+        ) : (
+          <table className="fn-table">
+            <thead>
               <tr>
-                <td colSpan="12" className="fn-empty">
-                  No fine records found{search ? ` for "${search}"` : ''}
-                </td>
+                <th>FINE ID</th>
+                <th>BORROW ID</th>
+                <th>MEMBER</th>
+                <th>BOOK</th>
+                <th>PHONE</th>
+                <th>OVERDUE DAYS</th>
+                <th>AMOUNT</th>
+                <th>PAID</th>
+                <th>METHOD</th>
+                <th>DATE</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
               </tr>
-            ) : (
-              filtered.map(f => {
-                const st = STATUS_STYLE[f.status]
-                return (
-                  <tr key={f.id}>
-                    <td><span className="fn-id">{f.id}</span></td>
-                    <td><span className="fn-borrow-id">{f.borrowId}</span></td>
-                    <td>
-                      <div className="fn-name">{f.member}</div>
-                      <div className="fn-sub2">{f.memberId}</div>
-                    </td>
-                    <td className="fn-book">{f.book}</td>
-                    <td className="fn-phone">{f.phone}</td>
-                    <td>
-                      <span className={f.days > 0 ? 'fn-days-red' : 'fn-days-ok'}>{f.days}</span>
-                    </td>
-                    <td><span className="fn-amount">Rs. {f.amount}.00</span></td>
-                    <td>
-                      <span className={f.paid > 0 ? 'fn-paid-val' : 'fn-paid-zero'}>Rs. {f.paid}.00</span>
-                    </td>
-                    <td className="fn-method">{f.method}</td>
-                    <td className="fn-date">{f.date}</td>
-                    <td>
-                      <span
-                        className="fn-status"
-                        style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}
-                      >
-                        <span className="fn-sdot" style={{ background: st.color }} />
-                        {f.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="fn-actions">
-                        {f.status === 'UNPAID' && (
-                          <>
-                            <button
-                              className="fn-btn fn-btn--collect"
-                              onClick={() => setCollect(f)}
-                            >Collect</button>
-                            <button
-                              className="fn-btn fn-btn--waive"
-                              onClick={() => setWaive(f)}
-                            >Waive</button>
-                          </>
-                        )}
-                        {f.status !== 'UNPAID' && (
-                          <span className="fn-done-label">—</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="12" className="fn-empty">
+                    No fine records found{search ? ` for "${search}"` : ''}
+                  </td>
+                </tr>
+              ) : (
+                filtered.map(f => {
+                  const st = STATUS_STYLE[f.status] || STATUS_STYLE.UNPAID
+                  return (
+                    <tr key={f.id}>
+                      <td><span className="fn-id">{f.id}</span></td>
+                      <td><span className="fn-borrow-id">{f.borrowId}</span></td>
+                      <td>
+                        <div className="fn-name">{f.member}</div>
+                        <div className="fn-sub2">{f.memberId}</div>
+                      </td>
+                      <td className="fn-book">{f.book}</td>
+                      <td className="fn-phone">{f.phone}</td>
+                      <td>
+                        <span className={f.days > 0 ? 'fn-days-red' : 'fn-days-ok'}>{f.days}</span>
+                      </td>
+                      <td><span className="fn-amount">Rs. {f.amount}.00</span></td>
+                      <td>
+                        <span className={f.paid > 0 ? 'fn-paid-val' : 'fn-paid-zero'}>Rs. {f.paid}.00</span>
+                      </td>
+                      <td className="fn-method">{f.method}</td>
+                      <td className="fn-date">{f.date}</td>
+                      <td>
+                        <span
+                          className="fn-status"
+                          style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}
+                        >
+                          <span className="fn-sdot" style={{ background: st.color }} />
+                          {f.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="fn-actions">
+                          {f.status === 'UNPAID' && (
+                            <>
+                              <button
+                                className="fn-btn fn-btn--collect"
+                                onClick={() => setCollect(f)}
+                              >Collect</button>
+                              <button
+                                className="fn-btn fn-btn--waive"
+                                onClick={() => setWaive(f)}
+                              >Waive</button>
+                            </>
+                          )}
+                          {f.status !== 'UNPAID' && (
+                            <span className="fn-done-label">—</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        )}
         <div className="fn-footer">
           <span>Showing {filtered.length} of {fines.length} fine records</span>
         </div>

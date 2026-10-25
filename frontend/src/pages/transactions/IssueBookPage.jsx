@@ -1,7 +1,8 @@
-﻿import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { api } from '../../api/client'
 import './IssueBookPage.css'
 
-const BORROWING_PERIOD_DAYS = 7
+const BORROWING_PERIOD_DAYS = 14
 
 function addDays(date, days) {
   const d = new Date(date)
@@ -13,24 +14,12 @@ function formatDate(date) {
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-const mockBooks = [
-  { id: 'BK-001', title: 'Introduction to Algorithms', author: 'Cormen, Leiserson', available: 2 },
-  { id: 'BK-003', title: 'Discrete Mathematics', author: 'Kenneth H. Rosen', available: 3 },
-  { id: 'BK-006', title: 'The C Programming Language', author: 'Kernighan & Ritchie', available: 4 },
-]
-
-const catalogStats = [
-  { total: 5 }, { total: 4 }, { total: 6 }, { total: 3 },
-  { total: 2 }, { total: 4 }, { total: 3 },
-]
-
-const issuedRecords = [
-  { id: 'BR-001', member: 'Kasun Perera',    memberId: 'MEM-881', book: 'Discrete Mathematics',     issued: '08/09/2026', due: '15/09/2026', status: 'BORROWED' },
-  { id: 'BR-002', member: 'N.S. Fernando',   memberId: 'MEM-112', book: 'Engineering Mechanics',  issued: '01/09/2026', due: '08/09/2026', status: 'OVERDUE'  },
-  { id: 'BR-004', member: 'Sahan Alwis',     memberId: 'MEM-404', book: 'Digital Signal Proc.',   issued: '10/09/2026', due: '17/09/2026', status: 'BORROWED' },
-]
-
 function parseDate(str) {
+  if (!str) return new Date()
+  if (str.includes('-')) {
+    const [y, m, d] = str.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
   const [d, m, y] = str.split('/').map(Number)
   return new Date(y, m - 1, d)
 }
@@ -49,11 +38,6 @@ function getOverdueDays(dueStr) {
 function isDueRecord(record) {
   return record.status === 'OVERDUE' || getOverdueDays(record.due) > 0
 }
-
-const totalBooks  = catalogStats.reduce((sum, b) => sum + b.total, 0)
-const issuedBooks = issuedRecords.length
-const dueRecords  = issuedRecords.filter(isDueRecord)
-const dueBooks    = dueRecords.length
 
 const STATUS_STYLE = {
   BORROWED: { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
@@ -79,7 +63,7 @@ function IssuedList({ records }) {
           <p className="ib-list-empty">No books currently issued.</p>
         ) : (
           records.map(r => {
-            const st = STATUS_STYLE[r.status]
+            const st = STATUS_STYLE[r.status] || STATUS_STYLE.BORROWED
             const overdueDays = getOverdueDays(r.due)
             return (
               <div key={r.id} className="ib-list-item">
@@ -139,8 +123,14 @@ function DueList({ records }) {
 }
 
 export default function IssueBookPage() {
+  const [books, setBooks]               = useState([])
+  const [members, setMembers]           = useState([])
+  const [issuedRecords, setIssued]     = useState([])
+  const [loading, setLoading]           = useState(true)
+
   const [step, setStep]                 = useState(1)
   const [phone, setPhone]               = useState('')
+  const [searchErr, setSearchErr]       = useState('')
   const [member, setMember]             = useState(null)
   const [bookSearch, setBookSearch]     = useState('')
   const [selectedBook, setSelectedBook] = useState(null)
@@ -149,6 +139,52 @@ export default function IssueBookPage() {
 
   const issueDate = new Date()
   const dueDate   = addDays(issueDate, BORROWING_PERIOD_DAYS)
+
+  const loadAll = useCallback(async () => {
+    try {
+      setLoading(true)
+      const [allBooks, allMembers, allBorrows] = await Promise.all([
+        api.getBooks(),
+        api.getMembers(),
+        api.getBorrowings()
+      ])
+
+      setBooks(allBooks.map(b => ({
+        ...b,
+        dbId: b.id,
+        id: b.book_id || `BK-${b.id}`,
+      })))
+
+      setMembers(allMembers)
+
+      const active = allBorrows
+        .filter(b => b.status === 'BORROWED' || b.status === 'OVERDUE')
+        .map(b => ({
+          id:       b.borrow_id || `BR-${b.id}`,
+          book:     b.book_title,
+          member:   b.member_name,
+          memberId: b.mem_id,
+          issued:   b.issued_date,
+          due:      b.due_date,
+          status:   b.status,
+        }))
+
+      setIssued(active)
+    } catch (err) {
+      console.error('Failed to load issue page data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadAll()
+  }, [loadAll])
+
+  const totalCatalogBooks = books.reduce((sum, b) => sum + (b.total || 0), 0)
+  const issuedBooks       = issuedRecords.length
+  const dueRecords        = issuedRecords.filter(isDueRecord)
+  const dueBooks          = dueRecords.length
 
   const openFindMember = () => {
     setStep(1)
@@ -162,15 +198,45 @@ export default function IssueBookPage() {
 
   const handleFindMember = (e) => {
     e.preventDefault()
-    if (phone.trim()) {
-      setMember({ id: 'MEM-881', name: 'Kasun Perera', phone, status: 'ACTIVE' })
-      setStep(2)
+    const q = phone.trim().replace(/\s/g, '').toLowerCase()
+    if (!q) { setSearchErr('Please enter phone or ID'); return }
+
+    const found = members.find(m =>
+      (m.phone && m.phone.replace(/\s/g, '').includes(q)) ||
+      (m.mem_id && m.mem_id.toLowerCase().includes(q)) ||
+      (m.name && m.name.toLowerCase().includes(q))
+    )
+
+    if (!found) {
+      setSearchErr('No registered member found with this phone number or ID.')
+      return
     }
+
+    setSearchErr('')
+    setMember({
+      dbId:   found.id,
+      id:     found.mem_id || `MEM-${found.id}`,
+      name:   found.name,
+      phone:  found.phone,
+      status: found.status,
+    })
+    setStep(2)
   }
 
-  const handleConfirm = () => {
-    setSuccess(true)
-    setShowModal(false)
+  const handleConfirm = async () => {
+    if (!member || !selectedBook) return
+    try {
+      await api.issueBorrowing({
+        member_id: member.dbId || member.id,
+        book_id:   selectedBook.dbId || selectedBook.id,
+        due_date:  dueDate.toISOString().slice(0, 10),
+      })
+      await loadAll()
+      setSuccess(true)
+      setShowModal(false)
+    } catch (err) {
+      alert(err.message || 'Failed to issue book')
+    }
   }
 
   const reset = () => {
@@ -178,69 +244,76 @@ export default function IssueBookPage() {
     setPhone('')
     setMember(null)
     setSelectedBook(null)
-    setBookSearch('')
     setSuccess(false)
     setShowModal(false)
   }
 
-  if (success) {
+  if (success && member && selectedBook) {
     return (
-      <div className="ib">
-        <div className="ib-success">
-          <div className="ib-success-icon">&#10003;</div>
+      <div className="ib-page">
+        <div className="ib-success-card">
+          <div className="ib-success-icon">✓</div>
           <h2>Book Issued Successfully</h2>
-          <p><strong>{selectedBook.title}</strong> issued to <strong>{member.name}</strong></p>
-          <p className="ib-success-dates">
-            Issue Date: {formatDate(issueDate)} &nbsp;|&nbsp; Due Date: {formatDate(dueDate)}
+          <p>
+            <strong>{selectedBook.title}</strong> has been issued to <strong>{member.name}</strong> ({member.id}).
           </p>
-          <button className="ib-new-btn" onClick={reset}>Issue Another Book</button>
+          <div className="ib-success-meta">
+            <span>Issue Date: <strong>{formatDate(issueDate)}</strong></span>
+            <span>Due Date: <strong className="ib-due-text">{formatDate(dueDate)}</strong></span>
+            <span>Borrowing Period: <strong>{BORROWING_PERIOD_DAYS} Days</strong></span>
+          </div>
+          <button className="ib-btn ib-btn--primary" onClick={reset}>
+            Issue Another Book
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="ib">
+    <div className="ib-page">
+      {/* Header */}
       <div className="ib-header">
-        <h2 className="ib-title">Issue Book</h2>
-        <p className="ib-sub">Issue a book to a member and track active loans</p>
+        <div>
+          <h2 className="ib-title">Issue Book</h2>
+          <p className="ib-subtitle">Search member, select book, and confirm issue</p>
+        </div>
       </div>
 
-      <div className="ib-kpi-row">
+      {/* KPI Cards */}
+      <div className="ib-kpis">
         <div className="ib-kpi">
           <div className="ib-kpi-icon ib-kpi-icon--blue"><BookIcon /></div>
           <div className="ib-kpi-body">
-            <div className="ib-kpi-label">Total Books</div>
-            <div className="ib-kpi-value">{totalBooks}</div>
-            <div className="ib-kpi-sub">{catalogStats.length} titles in catalog</div>
+            <span className="ib-kpi-label">TOTAL BOOKS</span>
+            <span className="ib-kpi-value">{totalCatalogBooks}</span>
+            <span className="ib-kpi-sub">Total catalog inventory</span>
           </div>
         </div>
         <div className="ib-kpi">
           <div className="ib-kpi-icon ib-kpi-icon--indigo"><IssuedIcon /></div>
           <div className="ib-kpi-body">
-            <div className="ib-kpi-label">Issued Books</div>
-            <div className="ib-kpi-value">{issuedBooks}</div>
-            <div className="ib-kpi-sub">Currently on loan to members</div>
+            <span className="ib-kpi-label">ISSUED BOOKS</span>
+            <span className="ib-kpi-value">{issuedBooks}</span>
+            <span className="ib-kpi-sub">Currently out on loan</span>
           </div>
         </div>
         <div className="ib-kpi ib-kpi--warn">
           <div className="ib-kpi-icon ib-kpi-icon--red"><DueIcon /></div>
           <div className="ib-kpi-body">
-            <div className="ib-kpi-label">Due Books</div>
-            <div className="ib-kpi-value ib-kpi-value--red">{dueBooks}</div>
-            <div className="ib-kpi-sub">Past due date — return pending</div>
+            <span className="ib-kpi-label">DUE BOOKS</span>
+            <span className="ib-kpi-value ib-kpi-value--red">{dueBooks}</span>
+            <span className="ib-kpi-sub">Need to be returned</span>
           </div>
         </div>
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar / Search Bar */}
       <div className="ib-toolbar">
-        <div className="ib-toolbar-search">
+        <div className="ib-search">
           <SearchIcon />
           <input
-            className="ib-toolbar-input"
-            type="text"
-            placeholder="Search member by phone number..."
+            placeholder="Search member by phone number or ID to start issuing..."
             value={phone}
             onChange={e => setPhone(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && openFindMember()}
@@ -263,8 +336,14 @@ export default function IssueBookPage() {
 
       {/* Lists — left & right */}
       <div className="ib-lists-row">
-        <IssuedList records={issuedRecords} />
-        <DueList records={dueRecords} />
+        {loading ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading circulation records...</div>
+        ) : (
+          <>
+            <IssuedList records={issuedRecords} />
+            <DueList records={dueRecords} />
+          </>
+        )}
       </div>
 
       {/* Issue flow modal */}
@@ -279,8 +358,8 @@ export default function IssueBookPage() {
                   {step === 3 && 'Confirm Issue'}
                 </h3>
                 <p className="ib-modal-sub">
-                  {step === 1 && 'Enter member phone number to start issuing a book'}
-                  {step === 2 && 'Choose a book from the available catalog'}
+                  {step === 1 && 'Enter member phone number or ID to start issuing a book'}
+                  {step === 2 && 'Choose an available book from the catalog'}
                   {step === 3 && 'Review details before confirming the issue'}
                 </p>
               </div>
@@ -299,17 +378,21 @@ export default function IssueBookPage() {
             <div className="ib-modal-body">
               {step === 1 && (
                 <form onSubmit={handleFindMember} className="ib-form">
-                  <label className="ib-label">Member Phone Number</label>
+                  <label className="ib-label">Member Phone Number or ID</label>
                   <div className="ib-input-row">
                     <input
                       className="ib-input"
                       type="text"
-                      placeholder="e.g. 0771234567"
+                      placeholder="e.g. 076 554 1122 or MEM-001"
                       value={phone}
-                      onChange={e => setPhone(e.target.value)}
+                      onChange={e => { setPhone(e.target.value); setSearchErr('') }}
                       autoFocus
                     />
                     <button type="submit" className="ib-btn ib-btn--primary">Search</button>
+                  </div>
+                  {searchErr && <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '6px' }}>{searchErr}</div>}
+                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '8px' }}>
+                    Try: 076 554 1122 &bull; 071 882 3891 &bull; MEM-001
                   </div>
                 </form>
               )}
@@ -322,20 +405,21 @@ export default function IssueBookPage() {
                       <div className="ib-member-name">{member.name}</div>
                       <div className="ib-member-meta">{member.id} &bull; {member.phone}</div>
                     </div>
-                    <span className="ib-active">ACTIVE</span>
+                    <span className="ib-active">{member.status || 'ACTIVE'}</span>
                   </div>
                   <div className="ib-input-row" style={{ marginTop: 16 }}>
                     <input
                       className="ib-input"
                       type="text"
-                      placeholder="Search by title, ISBN or author..."
+                      placeholder="Search available books by title, author, or ISBN..."
                       value={bookSearch}
                       onChange={e => setBookSearch(e.target.value)}
                     />
                   </div>
                   <div className="ib-book-list">
-                    {mockBooks
-                      .filter(b => !bookSearch || b.title.toLowerCase().includes(bookSearch.toLowerCase()))
+                    {books
+                      .filter(b => b.available > 0)
+                      .filter(b => !bookSearch || b.title.toLowerCase().includes(bookSearch.toLowerCase()) || b.author.toLowerCase().includes(bookSearch.toLowerCase()))
                       .map(b => (
                         <div
                           key={b.id}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import {
@@ -6,15 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts'
-import {
-  BORROWINGS,
-  filterByDateRange,
-  computeMonthlyChart,
-  computeStatusPie,
-  computePopularBooks,
-  computeMemberStats,
-  computeOverdueRecords,
-} from '../../data/libraryData'
+import { api } from '../../api/client'
 import './ReportsPage.css'
 
 /* ─── Config ─── */
@@ -530,35 +522,110 @@ export default function ReportsPage() {
   const [customTo,     setCustomTo]     = useState('')
   const reportRef = useRef(null)
 
-  /* Apply date range filter to the raw BORROWINGS */
-  const filteredBorrowings = useMemo(
-    () => filterByDateRange(BORROWINGS, dateFilter, customFrom, customTo),
-    [dateFilter, customFrom, customTo]
-  )
+  const [data, setData] = useState({
+    kpis: {
+      totalIssued: 0,
+      totalReturned: 0,
+      totalOverdue: 0,
+      totalFines: 0,
+      uniqueMembers: 0,
+      uniqueBooks: 0,
+    },
+    monthlyChart: [],
+    statusPie: [],
+    overdueRecords: [],
+    memberStats: [],
+    popularBooks: [],
+  })
+  const [loading, setLoading] = useState(true)
 
-  /* Derive all report data from the same filtered set */
-  const data = useMemo(() => {
-    const mc = computeMonthlyChart(filteredBorrowings)
-    return {
-      kpis: {
-        totalIssued:   filteredBorrowings.length,
-        totalReturned: filteredBorrowings.filter(b => b.status === 'RETURNED').length,
-        totalOverdue:  filteredBorrowings.filter(b => b.status === 'OVERDUE').length,
-        totalFines:    filteredBorrowings.reduce((s, b) => s + b.fine, 0),
-        uniqueMembers: new Set(filteredBorrowings.map(b => b.memberId)).size,
-        uniqueBooks:   new Set(filteredBorrowings.map(b => b.accNo)).size,
-      },
-      monthlyChart:   mc,
-      statusPie:      computeStatusPie(filteredBorrowings),
-      overdueRecords: computeOverdueRecords(filteredBorrowings),
-      memberStats:    computeMemberStats(filteredBorrowings),
-      popularBooks:   computePopularBooks(filteredBorrowings),
+  const loadReportData = useCallback(async () => {
+    try {
+      setLoading(true)
+      const params = {
+        filter: dateFilter,
+        from: dateFilter === 'Custom Range' ? customFrom : undefined,
+        to:   dateFilter === 'Custom Range' ? customTo   : undefined,
+      }
+
+      const [overview, overdue, popular, members] = await Promise.all([
+        api.getReportOverview(params).catch(() => ({ kpis: {}, monthly: [], statusPie: [] })),
+        api.getReportOverdue(params).catch(() => []),
+        api.getReportPopular(params).catch(() => []),
+        api.getReportMembers(params).catch(() => []),
+      ])
+
+      const STATUS_COLORS = {
+        BORROWED: '#1e3a8a',
+        RETURNED: '#10b981',
+        OVERDUE:  '#ef4444',
+      }
+
+      setData({
+        kpis: {
+          totalIssued:   overview?.kpis?.total_issued || 0,
+          totalReturned: overview?.kpis?.total_returned || 0,
+          totalOverdue:  overview?.kpis?.total_overdue || 0,
+          totalFines:    overview?.kpis?.total_fines || 0,
+          uniqueMembers: overview?.kpis?.unique_members || 0,
+          uniqueBooks:   overview?.kpis?.unique_books || 0,
+        },
+        monthlyChart: overview?.monthly || [],
+        statusPie:    (overview?.statusPie || []).map(s => ({
+          name:  s.name,
+          value: s.value,
+          color: STATUS_COLORS[s.name] || '#64748b',
+        })),
+        overdueRecords: overdue || [],
+        memberStats: (members || []).map(m => ({
+          id:       m.id || m.mem_id || 'MEM',
+          name:     m.name || 'Member',
+          borrowed: m.borrowed || 0,
+          returned: m.returned || 0,
+          overdue:  m.overdue || 0,
+          fines:    m.fines || 0,
+        })),
+        popularBooks: (popular || []).map(p => ({
+          rank:     p.rank,
+          id:       p.book_id || p.id || `BK-${p.rank}`,
+          title:    p.title || 'Untitled',
+          author:   p.author || 'Unknown',
+          borrowed: p.borrowed || 0,
+        })),
+      })
+    } catch (err) {
+      console.error('Failed to load reports:', err)
+    } finally {
+      setLoading(false)
     }
-  }, [filteredBorrowings])
+  }, [dateFilter, customFrom, customTo])
+
+  useEffect(() => {
+    loadReportData()
+  }, [loadReportData])
 
   const currentReport = REPORT_TYPES.find(r => r.key === activeReport)
 
+  const countForReport = useMemo(() => {
+    switch (activeReport) {
+      case 'overdue': return data.overdueRecords.length
+      case 'popular': return data.popularBooks.length
+      case 'members': return data.memberStats.length
+      default: return data.kpis.totalIssued || 0
+    }
+  }, [activeReport, data])
+
   const renderView = () => {
+    if (loading) {
+      return (
+        <div className="rp-empty-state">
+          <div className="rp-empty-icon">⏳</div>
+          <div className="rp-empty-title">Loading Analytics...</div>
+          <div className="rp-empty-sub">Fetching report records from SQLite database</div>
+        </div>
+      )
+    }
+
     switch (activeReport) {
       case 'overview':   return <OverviewView   data={data} />
       case 'borrowings': return <BorrowingView  data={data} mode="borrowings" />
@@ -582,7 +649,7 @@ export default function ReportsPage() {
         <div>
           <h2 className="rp-title">Reports</h2>
           <p className="rp-sub">
-            Live data from {BORROWINGS.length} borrowing records &mdash; {currentReport?.label} &mdash; filtered: <strong>{periodLabel}</strong> ({filteredBorrowings.length} records)
+            Live database reports &mdash; {currentReport?.label} &mdash; Period: <strong>{periodLabel}</strong> ({countForReport} records)
           </p>
         </div>
         <div className="rp-export-btns">
@@ -649,7 +716,7 @@ export default function ReportsPage() {
 
           <div className="rp-divider" />
           <div className="rp-sidebar-meta">
-            <div className="rp-meta-row"><span>Records</span><strong>{filteredBorrowings.length} / {BORROWINGS.length}</strong></div>
+            <div className="rp-meta-row"><span>Records</span><strong>{countForReport}</strong></div>
             <div className="rp-meta-row"><span>Period</span><strong>{dateFilter}</strong></div>
             <div className="rp-meta-row"><span>Generated</span><strong>{new Date().toLocaleDateString('en-GB')}</strong></div>
           </div>
@@ -664,7 +731,7 @@ export default function ReportsPage() {
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <span className="rp-report-period">{periodLabel}</span>
-              <span className="rp-report-count">{filteredBorrowings.length} records</span>
+              <span className="rp-report-count">{countForReport} records</span>
             </div>
           </div>
           {renderView()}

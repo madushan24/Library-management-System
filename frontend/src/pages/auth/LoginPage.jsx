@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { authenticate } from '../../constants/auth'
+import { api } from '../../api/client'
 import './LoginPage.css'
 
 export default function LoginPage() {
@@ -16,28 +16,26 @@ export default function LoginPage() {
   const libInfo = (() => {
     try { return JSON.parse(localStorage.getItem('lms_libInfo')) || {} } catch { return {} }
   })()
-  const libName    = libInfo.name    || 'Public Library PADIYATHALAWA'
+  const libName = libInfo.name || 'Public Library PADIYATHALAWA'
   const finePerDay = (() => {
     try { return JSON.parse(localStorage.getItem('lms_fines'))?.finePerDay || '1.00' } catch { return '1.00' }
   })()
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
     setErr('')
     if (!user.trim()) return setErr('Email is required.')
-    if (!pw.trim())   return setErr('Password is required.')
+    if (!pw.trim()) return setErr('Password is required.')
     setLoading(true)
-    setTimeout(() => {
+    try {
+      const result = await api.login({ username: user.trim(), password: pw })
+      sessionStorage.setItem('lms_user', JSON.stringify({ ...result.user, token: result.token }))
+      navigate(result.user.role === 'ADMIN' ? '/dashboard' : '/librarian')
+    } catch (e) {
+      setErr(e.message || 'Invalid email or password. Please try again.')
+    } finally {
       setLoading(false)
-      const account = authenticate(user, pw)
-      if (account) {
-        // Store session  will be replaced with JWT in Phase 17
-        sessionStorage.setItem('lms_user', JSON.stringify(account))
-        navigate(account.role === 'ADMIN' ? '/dashboard' : '/librarian')
-      } else {
-        setErr('Invalid email or password. Please try again.')
-      }
-    }, 900)
+    }
   }
 
   return (

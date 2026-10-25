@@ -1,18 +1,9 @@
-﻿import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './BooksPage.css'
 import BookDetailModal from '../../components/books/BookDetailModal'
 import EditBookModal from '../../components/books/EditBookModal'
 import AddBookModal from '../../components/books/AddBookModal'
-
-const BOOKS = [
-  { id: 'BK-001', isbn: '978-0-07-352332-2', title: 'Discrete Mathematics & Its Applications', author: 'Kenneth H. Rosen',    category: 'Mathematics',   available: 3, total: 5, borrowed: 2, status: 'AVAILABLE'    },
-  { id: 'BK-002', isbn: '978-0-13-468599-1', title: 'Modern Operating Systems',                author: 'Andrew Tanenbaum',    category: 'Comp Science',  available: 0, total: 4, borrowed: 4, status: 'OUT_OF_STOCK'  },
-  { id: 'BK-003', isbn: '978-0-262-03384-8', title: 'Introduction to Algorithms',              author: 'Cormen, Leiserson',   category: 'Computing',     available: 2, total: 6, borrowed: 4, status: 'AVAILABLE'    },
-  { id: 'BK-004', isbn: '978-0-13-602772-8', title: 'Microelectronic Circuits',                author: 'Sedra & Smith',       category: 'Engineering',   available: 1, total: 3, borrowed: 2, status: 'AVAILABLE'    },
-  { id: 'BK-005', isbn: '978-0-07-464765-7', title: 'Principles of Economics',                 author: 'N. Gregory Mankiw',  category: 'Economics',     available: 0, total: 2, borrowed: 0, status: 'MAINTENANCE'  },
-  { id: 'BK-006', isbn: '978-0-13-110362-7', title: 'The C Programming Language',              author: 'Kernighan & Ritchie', category: 'Computing',    available: 4, total: 4, borrowed: 0, status: 'AVAILABLE'    },
-  { id: 'BK-007', isbn: '978-0-20-163361-0', title: 'Clean Code',                              author: 'Robert C. Martin',   category: 'Software Eng',  available: 0, total: 3, borrowed: 3, status: 'OUT_OF_STOCK'  },
-]
+import { api } from '../../api/client'
 
 const STATUS_STYLE = {
   AVAILABLE:    { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
@@ -38,6 +29,8 @@ const AlertIcon   = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="
 const WrenchIcon  = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
 
 export default function BooksPage() {
+  const [books, setBooks]           = useState([])
+  const [loading, setLoading]       = useState(true)
   const [search, setSearch]         = useState('')
   const [catFilter, setCatFilter]   = useState('All Categories')
   const [statusFilter, setStatus]   = useState('All Status')
@@ -45,20 +38,77 @@ export default function BooksPage() {
   const [editBook, setEditBook]     = useState(null)
   const [showAdd, setShowAdd]       = useState(false)
 
-  const totalBooks    = BOOKS.reduce((s, b) => s + b.total, 0)
-  const availBooks    = BOOKS.reduce((s, b) => s + b.available, 0)
-  const borrowedBooks = BOOKS.reduce((s, b) => s + b.borrowed, 0)
-  const overdueBooks  = BOOKS.filter(b => b.borrowed > 0 && b.available === 0).length
-  const maintenance   = BOOKS.filter(b => b.status === 'MAINTENANCE').length
-  const needsAtten    = BOOKS.filter(b => b.status === 'OUT_OF_STOCK' || b.status === 'MAINTENANCE').length
+  const loadBooks = useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await api.getBooks()
+      const formatted = data.map(b => ({
+        ...b,
+        id: b.book_id || `BK-${String(b.id).padStart(3, '0')}`,
+        dbId: b.id,
+        borrowed: Math.max(0, (b.total || 0) - (b.available || 0)),
+      }))
+      setBooks(formatted)
+    } catch (err) {
+      console.error('Failed to load books:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
-  const categories = ['All Categories', ...new Set(BOOKS.map(b => b.category))]
+  useEffect(() => {
+    loadBooks()
+  }, [loadBooks])
 
-  const filtered = BOOKS.filter(b => {
+  const handleAdd = async (form) => {
+    try {
+      await api.createBook({
+        title: form.title,
+        author: form.author,
+        isbn: form.isbn,
+        category: form.category,
+        total: parseInt(form.total, 10) || 1,
+      })
+      await loadBooks()
+      setShowAdd(false)
+    } catch (err) {
+      alert(err.message || 'Failed to add book')
+    }
+  }
+
+  const handleEdit = async (updated) => {
+    try {
+      await api.updateBook(updated.dbId || updated.id, {
+        title: updated.title,
+        author: updated.author,
+        isbn: updated.isbn,
+        category: updated.category,
+        total: parseInt(updated.total, 10) || 1,
+        status: updated.status,
+      })
+      await loadBooks()
+      setEditBook(null)
+    } catch (err) {
+      alert(err.message || 'Failed to update book')
+    }
+  }
+
+  const totalBooks    = books.reduce((s, b) => s + (b.total || 0), 0)
+  const availBooks    = books.reduce((s, b) => s + (b.available || 0), 0)
+  const borrowedBooks = books.reduce((s, b) => s + (b.borrowed || 0), 0)
+  const overdueBooks  = books.filter(b => b.borrowed > 0 && b.available === 0).length
+  const maintenance   = books.filter(b => b.status === 'MAINTENANCE').length
+  const needsAtten    = books.filter(b => b.status === 'OUT_OF_STOCK' || b.status === 'MAINTENANCE').length
+
+  const categories = ['All Categories', ...new Set(books.map(b => b.category).filter(Boolean))]
+
+  const filtered = books.filter(b => {
     const q = search.toLowerCase()
-    const matchSearch = b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) || b.isbn.includes(q)
+    const matchSearch = (b.title || '').toLowerCase().includes(q) ||
+                        (b.author || '').toLowerCase().includes(q) ||
+                        (b.isbn || '').toLowerCase().includes(q)
     const matchCat    = catFilter === 'All Categories' || b.category === catFilter
-    const matchStatus = statusFilter === 'All Status'  || b.status.replace(/_/g, ' ') === statusFilter
+    const matchStatus = statusFilter === 'All Status'  || (b.status || '').replace(/_/g, ' ') === statusFilter
     return matchSearch && matchCat && matchStatus
   })
 
@@ -83,7 +133,7 @@ export default function BooksPage() {
           <div className="bp-kpi-body">
             <div className="bp-kpi-label">TOTAL BOOKS</div>
             <div className="bp-kpi-value">{totalBooks}</div>
-            <div className="bp-kpi-sub">{BOOKS.length} unique titles in catalog</div>
+            <div className="bp-kpi-sub">{books.length} unique titles in catalog</div>
           </div>
         </div>
         <div className="bp-kpi">
@@ -107,7 +157,7 @@ export default function BooksPage() {
           <div className="bp-kpi-body">
             <div className="bp-kpi-label">OVERDUE TO RETURN</div>
             <div className="bp-kpi-value bp-kpi-value--red">{overdueBooks}</div>
-            <div className="bp-kpi-sub">books past due  fines accumulating</div>
+            <div className="bp-kpi-sub">books past due · fines accumulating</div>
           </div>
         </div>
         <div className="bp-kpi bp-kpi--maint">
@@ -143,75 +193,87 @@ export default function BooksPage() {
 
       {/* Table */}
       <div className="bp-card">
-        <table className="bp-table">
-          <thead>
-            <tr>
-              <th>BOOK ID</th>
-              <th>ISBN</th>
-              <th>TITLE &amp; AUTHOR</th>
-              <th>CATEGORY</th>
-              <th>AVAILABLE</th>
-              <th>BORROWED</th>
-              <th>TOTAL</th>
-              <th>STATUS</th>
-              <th>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(b => {
-              const st  = STATUS_STYLE[b.status] || STATUS_STYLE.AVAILABLE
-              const cat = CAT_COLORS[b.category] || { color: '#64748b', bg: '#f8fafc' }
-              return (
-                <tr key={b.id}>
-                  <td><span className="bp-id">{b.id}</span></td>
-                  <td className="bp-isbn">{b.isbn}</td>
-                  <td>
-                    <div className="bp-book-title">{b.title}</div>
-                    <div className="bp-author">{b.author}</div>
-                  </td>
-                  <td>
-                    <span className="bp-cat" style={{ color: cat.color, background: cat.bg }}>
-                      {b.category}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`bp-copies${b.available === 0 ? ' bp-copies--zero' : ''}`}>
-                      {b.available}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`bp-borrowed${b.borrowed > 0 ? ' bp-borrowed--active' : ''}`}>
-                      {b.borrowed}
-                    </span>
-                  </td>
-                  <td className="bp-total">{b.total}</td>
-                  <td>
-                    <span className="bp-status" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>
-                      <span className="bp-status-dot" style={{ background: st.color }} />
-                      {b.status.replace(/_/g, ' ')}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="bp-actions">
-                      <button className="bp-btn bp-btn--view" onClick={() => setViewBook(b)}>View</button>
-                      <button className="bp-btn bp-btn--edit" onClick={() => setEditBook(b)}>Edit</button>
-                    </div>
+        {loading ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading books catalog...</div>
+        ) : (
+          <table className="bp-table">
+            <thead>
+              <tr>
+                <th>BOOK ID</th>
+                <th>ISBN</th>
+                <th>TITLE &amp; AUTHOR</th>
+                <th>CATEGORY</th>
+                <th>AVAILABLE</th>
+                <th>BORROWED</th>
+                <th>TOTAL</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                    No books matching filter
                   </td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
+              ) : (
+                filtered.map(b => {
+                  const st  = STATUS_STYLE[b.status] || STATUS_STYLE.AVAILABLE
+                  const cat = CAT_COLORS[b.category] || { color: '#64748b', bg: '#f8fafc' }
+                  return (
+                    <tr key={b.id}>
+                      <td><span className="bp-id">{b.id}</span></td>
+                      <td className="bp-isbn">{b.isbn || '-'}</td>
+                      <td>
+                        <div className="bp-book-title">{b.title}</div>
+                        <div className="bp-author">{b.author}</div>
+                      </td>
+                      <td>
+                        <span className="bp-cat" style={{ color: cat.color, background: cat.bg }}>
+                          {b.category}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`bp-copies${b.available === 0 ? ' bp-copies--zero' : ''}`}>
+                          {b.available}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`bp-borrowed${b.borrowed > 0 ? ' bp-borrowed--active' : ''}`}>
+                          {b.borrowed}
+                        </span>
+                      </td>
+                      <td className="bp-total">{b.total}</td>
+                      <td>
+                        <span className="bp-status" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>
+                          <span className="bp-status-dot" style={{ background: st.color }} />
+                          {(b.status || '').replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="bp-actions">
+                          <button className="bp-btn bp-btn--view" onClick={() => setViewBook(b)}>View</button>
+                          <button className="bp-btn bp-btn--edit" onClick={() => setEditBook(b)}>Edit</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        )}
         <div className="bp-footer">
-          <span>Showing {filtered.length} of {BOOKS.length} titles</span>
+          <span>Showing {filtered.length} of {books.length} titles</span>
           <span className="bp-footer-right">{totalBooks} total copies in library</span>
         </div>
       </div>
 
       {/* Modals */}
-      {showAdd   && <AddBookModal    onClose={() => setShowAdd(false)}   onSave={() => setShowAdd(false)} />}
+      {showAdd   && <AddBookModal    onClose={() => setShowAdd(false)}   onSave={handleAdd} />}
       {viewBook  && <BookDetailModal book={viewBook}  onClose={() => setViewBook(null)} onEdit={b => { setViewBook(null); setEditBook(b) }} />}
-      {editBook  && <EditBookModal   book={editBook}  onClose={() => setEditBook(null)} onSave={() => setEditBook(null)} />}
+      {editBook  && <EditBookModal   book={editBook}  onClose={() => setEditBook(null)} onSave={handleEdit} />}
     </div>
   )
 }
