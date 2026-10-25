@@ -1,14 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { api } from '../../api/client'
 import './LibrariansPage.css'
-
-/* ─── Initial data ─── */
-const INIT_LIBRARIANS = [
-  { id: 'LIB-001', name: 'Chaminda Perera',  initials: 'CP', color: '#1e3a8a', username: 'chaminda.p', email: 'chaminda@library.lk',  phone: '077 111 2233', role: 'Senior Librarian',    shift: 'Morning',   joined: '01/01/2024', lastLogin: '15/10/2026', status: 'ACTIVE'   },
-  { id: 'LIB-002', name: 'Nirosha Silva',    initials: 'NS', color: '#7c3aed', username: 'nirosha.s',  email: 'nirosha@library.lk',   phone: '071 223 4455', role: 'Librarian',           shift: 'Evening',   joined: '15/02/2024', lastLogin: '14/10/2026', status: 'ACTIVE'   },
-  { id: 'LIB-003', name: 'Ruwan Fernando',   initials: 'RF', color: '#0891b2', username: 'ruwan.f',    email: 'ruwan@library.lk',     phone: '076 334 5566', role: 'Assistant Librarian', shift: 'Morning',   joined: '10/03/2024', lastLogin: '10/10/2026', status: 'INACTIVE' },
-  { id: 'LIB-004', name: 'Amali Jayasinghe', initials: 'AJ', color: '#059669', username: 'amali.j',   email: 'amali@library.lk',     phone: '078 445 6677', role: 'Librarian',           shift: 'Afternoon', joined: '20/05/2024', lastLogin: '15/10/2026', status: 'ACTIVE'   },
-  { id: 'LIB-005', name: 'Kasun Rathnayake', initials: 'KR', color: '#d97706', username: 'kasun.r',   email: 'kasunr@library.lk',    phone: '075 556 7788', role: 'Assistant Librarian', shift: 'Evening',   joined: '12/07/2024', lastLogin: '13/10/2026', status: 'ACTIVE'   },
-]
 
 const STATUS_STYLE = {
   ACTIVE:   { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', dot: '#16a34a' },
@@ -106,37 +98,35 @@ function LibrarianModal({ librarian, onClose, onSave }) {
         )}
 
         <div className="lbp-modal-body">
-          {/* Step 1 / Edit: personal info */}
           {(step === 1 || isEdit) && (
             <div className="lbp-form-grid">
               {[
-                { label: 'Full Name',  key: 'name',     type: 'text',  ph: 'e.g. Chaminda Perera',      span: 2 },
-                { label: 'Username',   key: 'username',  type: 'text',  ph: 'e.g. chaminda.p'            },
-                { label: 'Phone',      key: 'phone',     type: 'text',  ph: '077 xxx xxxx'               },
-                { label: 'Email',      key: 'email',     type: 'email', ph: 'chaminda@library.lk', span: 2 },
+                { label: 'Full Name',  key: 'name',     type: 'text',  ph: 'e.g. Chaminda Perera', span: 2 },
+                { label: 'Username',   key: 'username', type: 'text',  ph: 'e.g. chaminda.p'       },
+                { label: 'Phone',      key: 'phone',    type: 'text',  ph: '077 xxx xxxx'          },
+                { label: 'Email',      key: 'email',    type: 'email', ph: 'chaminda@library.lk', span: 2 },
               ].map(f => (
                 <div key={f.key} className={`lbp-field${f.span === 2 ? ' lbp-field--full' : ''}`}>
                   <label className="lbp-label">{f.label}</label>
                   <input
                     className={`lbp-input${errors[f.key] ? ' lbp-input--err' : ''}`}
                     type={f.type} placeholder={f.ph}
-                    value={form[f.key]} onChange={e => set(f.key, e.target.value)}
+                    value={form[f.key] || ''} onChange={e => set(f.key, e.target.value)}
                   />
                   {errors[f.key] && <div className="lbp-err">{errors[f.key]}</div>}
                 </div>
               ))}
-              {/* Role & Shift shown inline in edit mode */}
               {isEdit && (
                 <>
                   <div className="lbp-field">
                     <label className="lbp-label">Role</label>
-                    <select className="lbp-input lbp-select" value={form.role} onChange={e => set('role', e.target.value)}>
+                    <select className="lbp-select" value={form.role} onChange={e => set('role', e.target.value)}>
                       {ROLES.map(r => <option key={r}>{r}</option>)}
                     </select>
                   </div>
                   <div className="lbp-field">
                     <label className="lbp-label">Shift</label>
-                    <select className="lbp-input lbp-select" value={form.shift} onChange={e => set('shift', e.target.value)}>
+                    <select className="lbp-select" value={form.shift} onChange={e => set('shift', e.target.value)}>
                       {SHIFTS.map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
@@ -145,23 +135,22 @@ function LibrarianModal({ librarian, onClose, onSave }) {
             </div>
           )}
 
-          {/* Step 2: role, shift, password */}
           {step === 2 && !isEdit && (
             <div className="lbp-form-grid">
               <div className="lbp-field">
                 <label className="lbp-label">Role</label>
-                <select className="lbp-input lbp-select" value={form.role} onChange={e => set('role', e.target.value)}>
+                <select className="lbp-select" value={form.role} onChange={e => set('role', e.target.value)}>
                   {ROLES.map(r => <option key={r}>{r}</option>)}
                 </select>
               </div>
               <div className="lbp-field">
                 <label className="lbp-label">Shift</label>
-                <select className="lbp-input lbp-select" value={form.shift} onChange={e => set('shift', e.target.value)}>
+                <select className="lbp-select" value={form.shift} onChange={e => set('shift', e.target.value)}>
                   {SHIFTS.map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
               <div className="lbp-field lbp-field--full">
-                <label className="lbp-label">Password</label>
+                <label className="lbp-label">Initial Password</label>
                 <div className="lbp-pw-wrap">
                   <input
                     className={`lbp-input${errors.password ? ' lbp-input--err' : ''}`}
@@ -183,31 +172,23 @@ function LibrarianModal({ librarian, onClose, onSave }) {
                 />
                 {errors.confirm && <div className="lbp-err">{errors.confirm}</div>}
               </div>
-
-              {/* Preview summary */}
-              <div className="lbp-preview lbp-field--full">
-                <div className="lbp-preview-av" style={{ background: '#1e3a8a' }}>{form.name[0] || '?'}</div>
-                <div>
-                  <div className="lbp-preview-name">{form.name || '—'}</div>
-                  <div className="lbp-preview-meta">{form.role} &bull; {form.shift} shift &bull; {form.username || '—'}</div>
-                </div>
-              </div>
             </div>
           )}
         </div>
 
         <div className="lbp-modal-footer">
-          {!isEdit && step === 2 && (
-            <button className="lbp-btn lbp-btn--ghost" onClick={() => setStep(1)}>Back</button>
-          )}
           <button className="lbp-btn lbp-btn--ghost lbp-modal-cancel" onClick={onClose}>Cancel</button>
           {!isEdit && step === 1 && (
-            <button className="lbp-btn lbp-btn--primary" onClick={handleNext}>Continue</button>
+            <button className="lbp-btn lbp-btn--primary" onClick={handleNext}>Next &rarr;</button>
           )}
-          {(isEdit || step === 2) && (
-            <button className="lbp-btn lbp-btn--success" onClick={handleSubmit}>
-              {isEdit ? 'Save Changes' : 'Create Librarian'}
-            </button>
+          {!isEdit && step === 2 && (
+            <>
+              <button className="lbp-btn lbp-btn--ghost" onClick={() => setStep(1)}>&larr; Back</button>
+              <button className="lbp-btn lbp-btn--primary" onClick={handleSubmit}>Create Librarian</button>
+            </>
+          )}
+          {isEdit && (
+            <button className="lbp-btn lbp-btn--primary" onClick={handleSubmit}>Save Changes</button>
           )}
         </div>
 
@@ -224,11 +205,15 @@ function ResetPwModal({ librarian, onClose, onReset }) {
   const [err, setErr]     = useState('')
   const [done, setDone]   = useState(false)
 
-  const handle = () => {
+  const handle = async () => {
     if (pw.length < 8)  { setErr('Minimum 8 characters'); return }
     if (pw !== confirm) { setErr('Passwords do not match'); return }
-    setDone(true)
-    onReset(librarian.id)
+    try {
+      await onReset(librarian.id, pw)
+      setDone(true)
+    } catch (e) {
+      setErr(e.message || 'Failed to reset password')
+    }
   }
 
   return (
@@ -247,7 +232,7 @@ function ResetPwModal({ librarian, onClose, onReset }) {
             <div className="lbp-success-mini">
               <div className="lbp-success-mini-icon">✓</div>
               <div className="lbp-success-mini-text">Password reset successfully!</div>
-              <div className="lbp-success-mini-sub">Librarian will be notified via email.</div>
+              <div className="lbp-success-mini-sub">Staff member can now log in with the new password.</div>
             </div>
           ) : (
             <div className="lbp-form-grid">
@@ -291,7 +276,7 @@ function ResetPwModal({ librarian, onClose, onReset }) {
 
 /* ─── View Profile Modal ─── */
 function ViewModal({ librarian, onClose }) {
-  const st = STATUS_STYLE[librarian.status]
+  const st = STATUS_STYLE[librarian.status] || STATUS_STYLE.ACTIVE
   return (
     <div className="lbp-modal-backdrop" onClick={onClose}>
       <div className="lbp-modal lbp-modal--sm" onClick={e => e.stopPropagation()}>
@@ -301,7 +286,7 @@ function ViewModal({ librarian, onClose }) {
         </div>
         <div className="lbp-modal-body">
           <div className="lbp-profile-hero">
-            <div className="lbp-profile-av" style={{ background: librarian.color }}>{librarian.initials}</div>
+            <div className="lbp-profile-av" style={{ background: librarian.color || '#1e3a8a' }}>{librarian.initials}</div>
             <div>
               <div className="lbp-profile-name">{librarian.name}</div>
               <div className="lbp-profile-role">{librarian.role} &bull; {librarian.shift} Shift</div>
@@ -321,7 +306,7 @@ function ViewModal({ librarian, onClose }) {
             ].map(([label, val]) => (
               <div key={label} className="lbp-profile-row">
                 <span className="lbp-profile-label">{label}</span>
-                <span className="lbp-profile-val">{val}</span>
+                <span className="lbp-profile-val">{val || '—'}</span>
               </div>
             ))}
           </div>
@@ -336,7 +321,8 @@ function ViewModal({ librarian, onClose }) {
 
 /* ─── Main Page ─── */
 export default function LibrariansPage() {
-  const [librarians, setLibrarians] = useState(INIT_LIBRARIANS)
+  const [librarians, setLibrarians] = useState([])
+  const [loading, setLoading]       = useState(true)
   const [search, setSearch]         = useState('')
   const [statusFilter, setStatus]   = useState('All Status')
 
@@ -351,61 +337,103 @@ export default function LibrariansPage() {
     setTimeout(() => setToast(null), 3200)
   }
 
+  const loadLibrarians = useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await api.getUsers()
+      const formatted = data.map((l, i) => ({
+        ...l,
+        dbId: l.id,
+        id: l.lib_id || `LIB-${String(l.id).padStart(3, '0')}`,
+        initials: l.name ? l.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'L',
+        color: ['#1e3a8a','#7c3aed','#059669','#0891b2','#d97706'][i % 5],
+        joined: l.joined_date || l.created_at?.slice(0, 10),
+        lastLogin: l.last_login || '—',
+      }))
+      setLibrarians(formatted)
+    } catch (err) {
+      console.error('Failed to load librarians:', err)
+      showToast(err.message || 'Failed to load staff accounts', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadLibrarians()
+  }, [loadLibrarians])
+
   /* KPIs */
   const totalLibs    = librarians.length
   const activeLibs   = librarians.filter(l => l.status === 'ACTIVE').length
   const inactiveLibs = librarians.filter(l => l.status === 'INACTIVE').length
   const shiftCounts  = { Morning: 0, Afternoon: 0, Evening: 0 }
   librarians.forEach(l => { if (shiftCounts[l.shift] !== undefined) shiftCounts[l.shift]++ })
-  const busyShift    = Object.entries(shiftCounts).sort((a, b) => b[1] - a[1])[0][0]
+  const busyShift    = Object.entries(shiftCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Morning'
 
   /* Filtered list */
   const filtered = librarians.filter(l => {
     const q = search.toLowerCase()
-    const matchQ = l.name.toLowerCase().includes(q) || l.username.toLowerCase().includes(q) ||
-      l.id.toLowerCase().includes(q) || l.email.toLowerCase().includes(q) || l.phone.includes(q)
+    const matchQ = (l.name || '').toLowerCase().includes(q) ||
+                   (l.username || '').toLowerCase().includes(q) ||
+                   (l.id || '').toLowerCase().includes(q) ||
+                   (l.email || '').toLowerCase().includes(q) ||
+                   (l.phone || '').includes(q)
     const matchS = statusFilter === 'All Status' || l.status === statusFilter
     return matchQ && matchS
   })
 
   /* Handlers */
-  const handleAdd = (form) => {
-    const newLib = {
-      id:        `LIB-${String(librarians.length + 1).padStart(3, '0')}`,
-      name:      form.name.trim(),
-      initials:  form.name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
-      color:     ['#1e3a8a','#7c3aed','#059669','#0891b2','#d97706'][librarians.length % 5],
-      username:  form.username.trim(),
-      email:     form.email.trim(),
-      phone:     form.phone.trim(),
-      role:      form.role,
-      shift:     form.shift,
-      joined:    new Date().toLocaleDateString('en-GB'),
-      lastLogin: '—',
-      status:    'ACTIVE',
+  const handleAdd = async (form) => {
+    try {
+      await api.createUser({
+        name: form.name.trim(),
+        username: form.username.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        role: form.role,
+        shift: form.shift,
+        password: form.password,
+      })
+      await loadLibrarians()
+      setShowAdd(false)
+      showToast(`Librarian "${form.name}" created successfully`)
+    } catch (err) {
+      alert(err.message || 'Failed to create librarian')
     }
-    setLibrarians(prev => [...prev, newLib])
-    setShowAdd(false)
-    showToast(`Librarian "${newLib.name}" created successfully`)
   }
 
-  const handleEdit = (form) => {
-    setLibrarians(prev => prev.map(l => l.id === editLib.id
-      ? { ...l, name: form.name, username: form.username, email: form.email, phone: form.phone, role: form.role, shift: form.shift }
-      : l
-    ))
-    setEditLib(null)
-    showToast('Librarian details updated successfully')
+  const handleEdit = async (form) => {
+    try {
+      await api.updateUser(editLib.dbId || editLib.id, {
+        name: form.name,
+        username: form.username,
+        email: form.email,
+        phone: form.phone,
+        role: form.role,
+        shift: form.shift,
+      })
+      await loadLibrarians()
+      setEditLib(null)
+      showToast('Librarian details updated successfully')
+    } catch (err) {
+      alert(err.message || 'Failed to update librarian')
+    }
   }
 
-  const handleToggleStatus = (lib) => {
-    const next = lib.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-    setLibrarians(prev => prev.map(l => l.id === lib.id ? { ...l, status: next } : l))
-    showToast(`${lib.name} has been ${next === 'ACTIVE' ? 'activated' : 'deactivated'}`, next === 'ACTIVE' ? 'success' : 'warn')
+  const handleToggleStatus = async (lib) => {
+    try {
+      const res = await api.toggleUserStatus(lib.dbId || lib.id)
+      await loadLibrarians()
+      showToast(`${lib.name} has been ${res.status === 'ACTIVE' ? 'activated' : 'deactivated'}`, res.status === 'ACTIVE' ? 'success' : 'warn')
+    } catch (err) {
+      alert(err.message || 'Failed to toggle status')
+    }
   }
 
-  const handleResetPw = (id) => {
-    showToast('Password reset email sent to librarian')
+  const handleResetPw = async (id, password) => {
+    await api.resetPassword(id, { password })
+    showToast('Password reset successfully in backend database')
   }
 
   return (
@@ -413,58 +441,54 @@ export default function LibrariansPage() {
 
       {/* Toast */}
       {toast && (
-        <div className={`lbp-toast lbp-toast--${toast.type}`}>{toast.msg}</div>
+        <div className={`lbp-toast lbp-toast--${toast.type}`}>
+          {toast.msg}
+        </div>
       )}
-
-      {/* Admin-only banner */}
-      <div className="lbp-admin-banner">
-        <span>🔒</span>
-        <span>ADMIN ONLY — Librarian Management is restricted to Admin users only.</span>
-      </div>
 
       {/* Header */}
       <div className="lbp-header">
         <div>
-          <h2 className="lbp-title">Librarian Management</h2>
-          <p className="lbp-sub">Create, manage and monitor librarian accounts and shift assignments</p>
+          <h2 className="lbp-title">Librarians</h2>
+          <p className="lbp-sub">Manage staff accounts, assign shifts, roles &amp; portal access permissions</p>
         </div>
         <button className="lbp-btn lbp-btn--primary" onClick={() => setShowAdd(true)}>
           <PlusIcon /> Add Librarian
         </button>
       </div>
 
-      {/* KPI cards */}
+      {/* KPIs */}
       <div className="lbp-kpi-row">
         <div className="lbp-kpi">
           <div className="lbp-kpi-icon lbp-kpi-icon--blue"><UsersIcon /></div>
           <div className="lbp-kpi-body">
-            <div className="lbp-kpi-label">Total Librarians</div>
-            <div className="lbp-kpi-value">{totalLibs}</div>
-            <div className="lbp-kpi-sub">across all shifts</div>
+            <div className="lbp-kpi-label">TOTAL STAFF</div>
+            <div className="lbp-kpi-val">{totalLibs}</div>
+            <div className="lbp-kpi-sub">registered staff accounts</div>
           </div>
         </div>
         <div className="lbp-kpi">
           <div className="lbp-kpi-icon lbp-kpi-icon--green"><CheckIcon /></div>
           <div className="lbp-kpi-body">
-            <div className="lbp-kpi-label">Active Accounts</div>
-            <div className="lbp-kpi-value lbp-kpi-value--green">{activeLibs}</div>
-            <div className="lbp-kpi-sub">currently enabled</div>
+            <div className="lbp-kpi-label">ACTIVE ACCOUNTS</div>
+            <div className="lbp-kpi-val lbp-kpi-val--green">{activeLibs}</div>
+            <div className="lbp-kpi-sub">{totalLibs > 0 ? Math.round((activeLibs / totalLibs) * 100) : 0}% of staff enabled</div>
           </div>
         </div>
         <div className="lbp-kpi">
-          <div className="lbp-kpi-icon lbp-kpi-icon--slate"><SunIcon /></div>
+          <div className="lbp-kpi-icon lbp-kpi-icon--amber"><SunIcon /></div>
           <div className="lbp-kpi-body">
-            <div className="lbp-kpi-label">Busiest Shift</div>
-            <div className="lbp-kpi-value">{busyShift}</div>
-            <div className="lbp-kpi-sub">{shiftCounts[busyShift]} librarian{shiftCounts[busyShift] !== 1 ? 's' : ''} assigned</div>
+            <div className="lbp-kpi-label">BUSIEST SHIFT</div>
+            <div className="lbp-kpi-val lbp-kpi-val--amber">{busyShift}</div>
+            <div className="lbp-kpi-sub">{shiftCounts[busyShift] || 0} librarians scheduled</div>
           </div>
         </div>
-        <div className="lbp-kpi lbp-kpi--warn">
-          <div className="lbp-kpi-icon lbp-kpi-icon--slate"><UsersIcon /></div>
+        <div className="lbp-kpi">
+          <div className="lbp-kpi-icon lbp-kpi-icon--slate"><KeyIcon /></div>
           <div className="lbp-kpi-body">
-            <div className="lbp-kpi-label">Inactive Accounts</div>
-            <div className="lbp-kpi-value lbp-kpi-value--slate">{inactiveLibs}</div>
-            <div className="lbp-kpi-sub">deactivated accounts</div>
+            <div className="lbp-kpi-label">INACTIVE ACCOUNTS</div>
+            <div className="lbp-kpi-val">{inactiveLibs}</div>
+            <div className="lbp-kpi-sub">access revoked / suspended</div>
           </div>
         </div>
       </div>
@@ -474,11 +498,13 @@ export default function LibrariansPage() {
         <div className="lbp-search">
           <SearchIcon />
           <input
-            placeholder="Search by name, username, ID, email or phone..."
+            placeholder="Search by name, ID, email, phone or username..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          {search && <button className="lbp-clear-btn" onClick={() => setSearch('')}>&#10005;</button>}
+          {search && (
+            <button className="lbp-clear-btn" onClick={() => setSearch('')}>&#10005;</button>
+          )}
         </div>
         <select className="lbp-select" value={statusFilter} onChange={e => setStatus(e.target.value)}>
           <option value="All Status">All Status</option>
@@ -489,78 +515,123 @@ export default function LibrariansPage() {
 
       {/* Table */}
       <div className="lbp-card">
-        <table className="lbp-table">
-          <thead>
-            <tr>
-              <th>LIBRARIAN ID</th>
-              <th>FULL NAME</th>
-              <th>ROLE</th>
-              <th>SHIFT</th>
-              <th>USERNAME</th>
-              <th>EMAIL</th>
-              <th>PHONE</th>
-              <th>JOINED</th>
-              <th>LAST LOGIN</th>
-              <th>STATUS</th>
-              <th>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan="11" className="lbp-empty">No librarians found{search ? ` for "${search}"` : ''}</td></tr>
-            ) : (
-              filtered.map(l => {
-                const st = STATUS_STYLE[l.status]
-                return (
-                  <tr key={l.id}>
-                    <td><span className="lbp-id">{l.id}</span></td>
-                    <td>
-                      <div className="lbp-name-row">
-                        <div className="lbp-avatar" style={{ background: l.color }}>{l.initials}</div>
-                        <span className="lbp-name">{l.name}</span>
-                      </div>
-                    </td>
-                    <td className="lbp-role">{l.role}</td>
-                    <td><span className="lbp-shift-badge">{l.shift}</span></td>
-                    <td className="lbp-username">@{l.username}</td>
-                    <td className="lbp-email">{l.email}</td>
-                    <td className="lbp-phone">{l.phone}</td>
-                    <td className="lbp-date">{l.joined}</td>
-                    <td className="lbp-date">{l.lastLogin}</td>
-                    <td>
-                      <span className="lbp-status-badge" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>
-                        <span className="lbp-dot" style={{ background: st.dot }} />{l.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="lbp-actions">
-                        <button className="lbp-act-btn lbp-act-btn--view"  onClick={() => setViewLib(l)}  title="View Profile">View</button>
-                        <button className="lbp-act-btn lbp-act-btn--edit"  onClick={() => setEditLib(l)}  title="Edit"><EditIcon /> Edit</button>
-                        <button className="lbp-act-btn lbp-act-btn--reset" onClick={() => setResetLib(l)} title="Reset Password"><KeyIcon /> Reset PW</button>
-                        <button
-                          className={`lbp-act-btn ${l.status === 'ACTIVE' ? 'lbp-act-btn--deact' : 'lbp-act-btn--act'}`}
-                          onClick={() => handleToggleStatus(l)}
-                        >
-                          {l.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+        {loading ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading librarian accounts...</div>
+        ) : (
+          <table className="lbp-table">
+            <thead>
+              <tr>
+                <th>LIBRARIAN</th>
+                <th>ID</th>
+                <th>CONTACT</th>
+                <th>ROLE &amp; SHIFT</th>
+                <th>JOINED</th>
+                <th>LAST LOGIN</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="lbp-empty">No librarians found matching filter</td>
+                </tr>
+              ) : (
+                filtered.map(lib => {
+                  const st = STATUS_STYLE[lib.status] || STATUS_STYLE.ACTIVE
+                  return (
+                    <tr key={lib.id}>
+                      <td>
+                        <div className="lbp-user-cell">
+                          <div className="lbp-avatar" style={{ background: lib.color || '#1e3a8a' }}>
+                            {lib.initials}
+                          </div>
+                          <div>
+                            <div className="lbp-name">{lib.name}</div>
+                            <div className="lbp-username">@{lib.username}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span className="lbp-id-badge">{lib.id}</span></td>
+                      <td>
+                        <div className="lbp-contact-cell">
+                          <div className="lbp-phone">{lib.phone}</div>
+                          <div className="lbp-email">{lib.email}</div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="lbp-role-cell">
+                          <div className="lbp-role">{lib.role}</div>
+                          <div className="lbp-shift-tag">{lib.shift} Shift</div>
+                        </div>
+                      </td>
+                      <td className="lbp-date">{lib.joined}</td>
+                      <td className="lbp-date">{lib.lastLogin}</td>
+                      <td>
+                        <span className="lbp-status-badge" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>
+                          <span className="lbp-dot" style={{ background: st.dot }} />
+                          {lib.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="lbp-actions">
+                          <button className="lbp-act-btn" title="View details" onClick={() => setViewLib(lib)}>
+                            <EyeIcon /> View
+                          </button>
+                          <button className="lbp-act-btn" title="Edit" onClick={() => setEditLib(lib)}>
+                            <EditIcon /> Edit
+                          </button>
+                          <button className="lbp-act-btn" title="Reset password" onClick={() => setResetLib(lib)}>
+                            <KeyIcon /> Reset
+                          </button>
+                          <button
+                            className={`lbp-act-btn lbp-act-btn--toggle${lib.status === 'ACTIVE' ? ' warn' : ''}`}
+                            title={lib.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                            onClick={() => handleToggleStatus(lib)}
+                          >
+                            {lib.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        )}
         <div className="lbp-footer">
-          Showing {filtered.length} of {librarians.length} librarians
+          <span>Showing {filtered.length} of {librarians.length} librarians</span>
         </div>
       </div>
 
       {/* Modals */}
-      {showAdd   && <LibrarianModal librarian={null}   onClose={() => setShowAdd(false)}  onSave={handleAdd}  />}
-      {editLib   && <LibrarianModal librarian={editLib} onClose={() => setEditLib(null)}   onSave={handleEdit} />}
-      {resetLib  && <ResetPwModal   librarian={resetLib} onClose={() => setResetLib(null)} onReset={handleResetPw} />}
-      {viewLib   && <ViewModal      librarian={viewLib}  onClose={() => setViewLib(null)}  />}
+      {showAdd && (
+        <LibrarianModal
+          onClose={() => setShowAdd(false)}
+          onSave={handleAdd}
+        />
+      )}
+      {editLib && (
+        <LibrarianModal
+          librarian={editLib}
+          onClose={() => setEditLib(null)}
+          onSave={handleEdit}
+        />
+      )}
+      {resetLib && (
+        <ResetPwModal
+          librarian={resetLib}
+          onClose={() => setResetLib(null)}
+          onReset={handleResetPw}
+        />
+      )}
+      {viewLib && (
+        <ViewModal
+          librarian={viewLib}
+          onClose={() => setViewLib(null)}
+        />
+      )}
 
     </div>
   )

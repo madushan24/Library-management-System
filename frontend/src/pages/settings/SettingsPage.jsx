@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { api } from '../../api/client'
 import './SettingsPage.css'
 
 /* ─── Theme / display helpers ─── */
@@ -140,6 +141,20 @@ export default function SettingsPage() {
   })
   const [showPw, setShowPw] = useState({ current: false, newPw: false, confirm: false })
 
+  /* Load settings from backend on mount */
+  useEffect(() => {
+    api.getSettings()
+      .then(res => {
+        if (!res) return
+        if (res.libInfo) setLibInfo(res.libInfo)
+        if (res.borrow) setBorrow(res.borrow)
+        if (res.fines) setFines(res.fines)
+        if (res.notif) setNotif(res.notif)
+        if (res.security) setSecurity(res.security)
+      })
+      .catch(err => console.warn('Using local settings cache:', err))
+  }, [])
+
   /* scroll to #profile on mount if hash matches */
   useEffect(() => {
     if (window.location.hash === '#profile') {
@@ -147,38 +162,77 @@ export default function SettingsPage() {
     }
   }, [])
 
-  function saveProfile() {
+  async function saveProfile() {
     if (profile.newPw && profile.newPw !== profile.confirmPw) {
       showToast('New passwords do not match')
       return
     }
-    const updated = { ...session, name: profile.name, username: profile.username,
-      initials: profile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) }
-    sessionStorage.setItem('lms_user', JSON.stringify(updated))
-    setProfile(p => ({ ...p, currentPw: '', newPw: '', confirmPw: '' }))
-    showToast('Profile updated successfully')
+    try {
+      await api.updateProfile({
+        name: profile.name,
+        username: profile.username,
+        password: profile.newPw || undefined
+      })
+      const updated = { ...session, name: profile.name, username: profile.username,
+        initials: profile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) }
+      sessionStorage.setItem('lms_user', JSON.stringify(updated))
+      setProfile(p => ({ ...p, currentPw: '', newPw: '', confirmPw: '' }))
+      showToast('Profile updated successfully')
+    } catch (err) {
+      showToast(err.message || 'Failed to update profile')
+    }
   }
 
-  /* ── Save handlers (each persists to localStorage) ── */
-  const saveLib = () => {
-    localStorage.setItem('lms_libInfo', JSON.stringify(libInfo))
-    showToast('Library information saved')
+  /* ── Save handlers (persists to backend database + local cache) ── */
+  const saveLib = async () => {
+    try {
+      await api.saveSettings({ libInfo })
+      localStorage.setItem('lms_libInfo', JSON.stringify(libInfo))
+      showToast('Library information saved')
+    } catch {
+      localStorage.setItem('lms_libInfo', JSON.stringify(libInfo))
+      showToast('Saved locally (offline)')
+    }
   }
-  const saveBorrow = () => {
-    localStorage.setItem('lms_borrow', JSON.stringify(borrow))
-    showToast('Borrowing rules saved')
+  const saveBorrow = async () => {
+    try {
+      await api.saveSettings({ borrow })
+      localStorage.setItem('lms_borrow', JSON.stringify(borrow))
+      showToast('Borrowing rules saved')
+    } catch {
+      localStorage.setItem('lms_borrow', JSON.stringify(borrow))
+      showToast('Saved locally (offline)')
+    }
   }
-  const saveFines = () => {
-    localStorage.setItem('lms_fines', JSON.stringify(fines))
-    showToast('Fine settings saved')
+  const saveFines = async () => {
+    try {
+      await api.saveSettings({ fines })
+      localStorage.setItem('lms_fines', JSON.stringify(fines))
+      showToast('Fine settings saved')
+    } catch {
+      localStorage.setItem('lms_fines', JSON.stringify(fines))
+      showToast('Saved locally (offline)')
+    }
   }
-  const saveNotif = () => {
-    localStorage.setItem('lms_notif', JSON.stringify(notif))
-    showToast('Notification preferences saved')
+  const saveNotif = async () => {
+    try {
+      await api.saveSettings({ notif })
+      localStorage.setItem('lms_notif', JSON.stringify(notif))
+      showToast('Notification preferences saved')
+    } catch {
+      localStorage.setItem('lms_notif', JSON.stringify(notif))
+      showToast('Saved locally (offline)')
+    }
   }
-  const saveSecurity = () => {
-    localStorage.setItem('lms_security', JSON.stringify(security))
-    showToast('Security settings saved')
+  const saveSecurity = async () => {
+    try {
+      await api.saveSettings({ security })
+      localStorage.setItem('lms_security', JSON.stringify(security))
+      showToast('Security settings saved')
+    } catch {
+      localStorage.setItem('lms_security', JSON.stringify(security))
+      showToast('Saved locally (offline)')
+    }
   }
 
   const ACCENTS = [

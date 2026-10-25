@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../../api/client'
 import './LibrarianDashboard.css'
 
 /* ─── Icons ─── */
@@ -10,7 +11,6 @@ const UserPlusIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill=
 const BookOpenIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
 const ReturnIcon   = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.89"/></svg>
 const BooksIcon    = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-const BellIcon     = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
 const ArrowDownIcon= () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
 const SwapIcon     = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
 const AlertIcon    = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -22,68 +22,20 @@ const XIcon        = () => <svg width="14" height="14" viewBox="0 0 24 24" fill=
 const IssueIcon    = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
 const ReportIcon   = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
 
-/* ─── Demo member data ─── */
-const MEMBERS_DB = {
-  '077 123 4567': {
-    name: 'Kasun Perera', initials: 'KP', id: 'MEM-881',
-    phone: '077 123 4567', dept: 'Faculty of Computing & Technology',
-    type: 'Undergraduate', validity: '31 Dec 2026', status: 'ACTIVE',
-    borrowed: 2, maxBorrow: 3, fine: 4.00,
-    books: [
-      { title: 'Discrete Mathematics & Its Applications', acc: 'ACC-88219', due: '22 Sep 2026', overdue: false },
-      { title: 'Algorithm Design: Foundations Vol. II',   acc: 'ACC-74301', due: 'Yesterday',   overdue: true  },
-    ],
-  },
-  '071 882 3891': {
-    name: 'N.S. Fernando', initials: 'NF', id: 'MEM-112',
-    phone: '071 882 3891', dept: 'Faculty of Engineering',
-    type: 'Student', validity: '31 Dec 2026', status: 'ACTIVE',
-    borrowed: 1, maxBorrow: 3, fine: 10.00,
-    books: [
-      { title: 'Engineering Mechanics: Statics', acc: 'ACC-33011', due: '08 Sep 2026', overdue: true },
-    ],
-  },
-  '078 991 4455': {
-    name: 'Sahan Alwis', initials: 'SA', id: 'MEM-404',
-    phone: '078 991 4455', dept: 'Faculty of Science',
-    type: 'Research Fellow', validity: '30 Jun 2027', status: 'ACTIVE',
-    borrowed: 0, maxBorrow: 3, fine: 0,
-    books: [],
-  },
-}
-
-/* ─── Demo today's transactions ─── */
-const TODAYS_ISSUES = [
-  { patron: 'Kasun Perera',       memberId: 'MEM-881', type: 'Undergraduate',  book: 'Discrete Mathematics & Its Applications',    acc: 'ACC-88219', time: '10:42 AM', due: '22 Sep 2026' },
-  { patron: 'Dilani Wickrama',    memberId: 'MEM-084', type: 'Research Fellow', book: 'Modern Operating Systems (4th Edition)',      acc: 'ACC-90412', time: '10:28 AM', due: '22 Sep 2026' },
-  { patron: 'S. Rathnayake',      memberId: 'MEM-219', type: 'Undergraduate',  book: 'Introduction to Algorithms (CLRS)',           acc: 'ACC-31082', time: '09:55 AM', due: '22 Sep 2026' },
-  { patron: 'Nethmi Jayawardene', memberId: 'MEM-512', type: 'Faculty Staff',  book: 'Artificial Intelligence: A Modern Approach', acc: 'ACC-11944', time: '09:12 AM', due: '22 Sep 2026' },
-  { patron: 'H.M. Farook',        memberId: 'MEM-217', type: 'Student',        book: 'The C Programming Language',                  acc: 'ACC-22010', time: '08:50 AM', due: '22 Sep 2026' },
-]
-
-const TODAYS_RETURNS = [
-  { patron: 'Dilani Wickrama', memberId: 'MEM-084', book: 'Calculus: Early Transcendentals',        acc: 'ACC-44201', time: '11:14 AM', fine: 0    },
-  { patron: 'A.G. Perera',     memberId: 'MEM-331', book: 'Database System Concepts',               acc: 'ACC-55012', time: '10:50 AM', fine: 0    },
-  { patron: 'K.M. Bandara',    memberId: 'MEM-391', book: 'Data Structures in C++ (2nd Ed)',        acc: 'ACC-62841', time: '10:33 AM', fine: 14   },
-  { patron: 'Fathima Rizna',   memberId: 'MEM-405', book: 'Microelectronic Circuits',               acc: 'ACC-77103', time: '09:40 AM', fine: 0    },
-]
-
-const OVERDUE = [
-  { name: 'K.M. Bandara',    phone: '077 123 4567', id: 'MEM-391', days: 14, fine: 14.00, book: 'Data Structures in C++ (2nd Ed)'  },
-  { name: 'N.S. Fernando',   phone: '071 882 3891', id: 'MEM-112', days: 10, fine: 10.00, book: 'Engineering Mechanics: Statics'    },
-  { name: 'Sahan Alwis',     phone: '078 991 4455', id: 'MEM-404', days: 7,  fine: 7.00,  book: 'Digital Signal Processing...'     },
-  { name: 'M.A. Perera',     phone: '076 543 2198', id: 'MEM-302', days: 5,  fine: 5.00,  book: 'Clinical Pharmacology 6th Ed'     },
-]
-
 export default function LibrarianDashboard() {
   const navigate = useNavigate()
+
+  const [membersList, setMembersList] = useState([])
+  const [borrowings, setBorrowings]   = useState([])
+  const [fines, setFines]             = useState([])
+  const [loading, setLoading]         = useState(true)
 
   /* Member lookup */
   const [query,       setQuery]      = useState('')
   const [member,      setMember]     = useState(null)
+  const [memberLoans, setMemberLoans]= useState([])
   const [notFound,    setNotFound]   = useState(false)
   const [activeTab,   setActiveTab]  = useState('issues')
-  const [overdueList, setOverdue]    = useState(OVERDUE)
   const [toast,       setToast]      = useState(null)
 
   const showToast = (msg, type = 'success') => {
@@ -91,59 +43,113 @@ export default function LibrarianDashboard() {
     setTimeout(() => setToast(null), 2800)
   }
 
-  /* ── Member search ── */
-  const handleSearch = (e) => {
-    e.preventDefault()
-    const q = query.trim()
+  const loadAll = useCallback(async () => {
+    try {
+      setLoading(true)
+      const [mems, borrows, allFines] = await Promise.all([
+        api.getMembers().catch(() => []),
+        api.getBorrowings().catch(() => []),
+        api.getFines().catch(() => [])
+      ])
+      setMembersList(mems)
+      setBorrowings(borrows)
+      setFines(allFines)
+    } catch (err) {
+      console.error('Failed to load desk data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadAll()
+  }, [loadAll])
+
+  /* Member search */
+  const handleSearch = async (e) => {
+    e?.preventDefault()
+    const q = query.trim().replace(/\s/g, '').toLowerCase()
     if (!q) return
-    const found = MEMBERS_DB[q] || Object.values(MEMBERS_DB).find(m => m.id.toLowerCase() === q.toLowerCase())
-    if (found) { setMember(found); setNotFound(false) }
-    else       { setMember(null);  setNotFound(true)  }
+
+    const found = membersList.find(m =>
+      (m.phone && m.phone.replace(/\s/g, '').includes(q)) ||
+      (m.mem_id && m.mem_id.toLowerCase().includes(q)) ||
+      (m.name && m.name.toLowerCase().includes(q))
+    )
+
+    if (found) {
+      setMember(found)
+      setNotFound(false)
+      // fetch member's live loans
+      try {
+        const full = await api.getMember(found.id)
+        setMemberLoans(full.history?.filter(h => h.status === 'BORROWED' || h.status === 'OVERDUE') || [])
+      } catch {
+        setMemberLoans([])
+      }
+    } else {
+      setMember(null)
+      setMemberLoans([])
+      setNotFound(true)
+    }
   }
 
-  const clearSearch = () => { setQuery(''); setMember(null); setNotFound(false) }
-
-  /* ── Overdue actions ── */
-  const handleSms  = (name) => showToast(`SMS reminder sent to ${name}`)
-  const handleCollect = (id) => {
-    setOverdue(prev => prev.filter(o => o.id !== id))
-    showToast('Fine collected & book returned')
+  const clearSearch = () => {
+    setQuery('')
+    setMember(null)
+    setMemberLoans([])
+    setNotFound(false)
   }
 
-  /* ── Session info ── */
+  const handleSms = (name) => showToast(`SMS reminder queued for ${name}`)
+  
+  const handleCollect = async (borrowId) => {
+    try {
+      await api.payFine(borrowId, { method: 'Cash' })
+      showToast('Fine payment collected successfully')
+      await loadAll()
+    } catch (err) {
+      showToast(err.message || 'Failed to collect fine', 'error')
+    }
+  }
+
+  /* Session info */
   const session   = (() => { try { return JSON.parse(sessionStorage.getItem('lms_user')) || {} } catch { return {} } })()
   const libName   = session.name || 'Librarian'
   const now       = new Date()
   const timeStr   = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   const dateStr   = now.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 
-  const fineRate  = (() => { try { return JSON.parse(localStorage.getItem('lms_fines'))?.finePerDay || '1.00' } catch { return '1.00' } })()
+  const todaysIssues = borrowings.filter(b => b.status === 'BORROWED' || b.status === 'OVERDUE')
+  const todaysReturns = borrowings.filter(b => b.status === 'RETURNED')
+  const overdueList   = borrowings.filter(b => b.status === 'OVERDUE')
+  const totalFinesUnpaid = fines.filter(f => f.status === 'UNPAID').reduce((s, f) => s + (f.amount || 0), 0)
 
   const KPI = [
-    { label: "Today's Issues",     value: TODAYS_ISSUES.length,  sub: '+2 this hour',       icon: <ArrowDownIcon />, color: 'blue'   },
-    { label: "Today's Returns",    value: TODAYS_RETURNS.length, sub: 'Restocked & sorted', icon: <ReturnIcon />,    color: 'green'  },
-    { label: 'Active Circulation', value: '625',                 sub: 'Total on loan',      icon: <SwapIcon />,      color: 'indigo' },
-    { label: 'Overdue Books',      value: overdueList.length,    sub: 'Pending returns',    icon: <AlertIcon />,     color: 'red'    },
-    { label: "Fine Rate",          value: `Rs. ${fineRate}`,     sub: 'per overdue day',    icon: <DollarIcon />,    color: 'amber'  },
-    { label: "Today's Fines",      value: 'Rs. 450',             sub: 'Collected today',    icon: <ClockIcon />,     color: 'teal'   },
+    { label: "Active Issues",      value: todaysIssues.length,  sub: 'Currently on loan',  icon: <ArrowDownIcon />, color: 'blue'   },
+    { label: "Returned Books",     value: todaysReturns.length, sub: 'Restocked in catalog', icon: <ReturnIcon />,    color: 'green'  },
+    { label: 'Active Patrons',     value: membersList.length,   sub: 'Registered members', icon: <SwapIcon />,      color: 'indigo' },
+    { label: 'Overdue Books',      value: overdueList.length,   sub: 'Pending returns',    icon: <AlertIcon />,     color: 'red'    },
+    { label: "Fine Rate",          value: 'Rs. 1.00',           sub: 'per overdue day',    icon: <DollarIcon />,    color: 'amber'  },
+    { label: "Unpaid Fines",       value: `Rs. ${totalFinesUnpaid}`, sub: 'Due collection', icon: <ClockIcon />,     color: 'teal'   },
   ]
 
   return (
     <div className="ld">
 
-      {/* ── Toast ── */}
+      {/* Toast */}
       {toast && (
         <div className={`ld-toast ld-toast--${toast.type}`}>
           <CheckIcon /> {toast.msg}
         </div>
       )}
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="ld-header">
         <div className="ld-header-left">
           <div className="ld-header-title-row">
             <h2 className="ld-header-title">Librarian Desk</h2>
-            <span className="ld-desk-badge">● Desk 01 · Active Session</span>
+            <span className="ld-desk-badge">Desk 01 · Live SQLite Session</span>
           </div>
           <p className="ld-header-sub">
             Welcome, <strong>{libName}</strong> &nbsp;·&nbsp; {dateStr} &nbsp;·&nbsp; {timeStr}
@@ -168,7 +174,7 @@ export default function LibrarianDashboard() {
         </div>
       </div>
 
-      {/* ── KPI Row ── */}
+      {/* KPI Row */}
       <div className="ld-kpi-row">
         {KPI.map((k, i) => (
           <div key={i} className={`ld-kpi ld-kpi--${k.color}`}>
@@ -182,10 +188,10 @@ export default function LibrarianDashboard() {
         ))}
       </div>
 
-      {/* ── Main Grid ── */}
+      {/* Main Grid */}
       <div className="ld-main-grid">
 
-        {/* ── LEFT: Member Lookup ── */}
+        {/* LEFT: Member Lookup */}
         <div className="ld-left-col">
 
           {/* Find Member Card */}
@@ -193,9 +199,9 @@ export default function LibrarianDashboard() {
             <div className="ld-find-header">
               <div>
                 <div className="ld-find-title">Find Member</div>
-                <div className="ld-find-sub">Lookup by phone number or Member ID</div>
+                <div className="ld-find-sub">Lookup by phone number, ID, or name</div>
               </div>
-              <span className="ld-rfid-badge">● RFID Ready</span>
+              <span className="ld-rfid-badge">Database Search</span>
             </div>
 
             <form onSubmit={handleSearch}>
@@ -207,7 +213,7 @@ export default function LibrarianDashboard() {
                   type="text"
                   value={query}
                   onChange={e => setQuery(e.target.value)}
-                  placeholder="077 123 4567 or MEM-881"
+                  placeholder="076 554 1122 or MEM-001"
                   autoComplete="off"
                 />
                 {query && (
@@ -215,7 +221,7 @@ export default function LibrarianDashboard() {
                 )}
               </div>
               <div className="ld-phone-hint">
-                Try: <strong>077 123 4567</strong> · <strong>071 882 3891</strong> · <strong>078 991 4455</strong>
+                Try: <strong>076 554 1122</strong> · <strong>071 882 3891</strong> · <strong>MEM-001</strong>
               </div>
               <div className="ld-search-row">
                 <button type="submit" className="ld-search-btn"><SearchIcon /> Search Member</button>
@@ -224,253 +230,152 @@ export default function LibrarianDashboard() {
             </form>
 
             {/* Quick switch */}
-            <div className="ld-quick-label">QUICK COUNTER SWITCH</div>
+            <div className="ld-quick-label">QUICK COUNTER SELECTION</div>
             <div className="ld-quick-list">
-              {Object.values(MEMBERS_DB).map(m => (
+              {membersList.slice(0, 6).map(m => (
                 <button
                   key={m.id}
                   className="ld-quick-btn"
                   onClick={() => { setQuery(m.phone); setMember(m); setNotFound(false) }}
                 >
-                  {m.initials} · {m.id}
+                  {m.name?.slice(0, 2).toUpperCase()} · {m.mem_id || m.id}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Member Result */}
-          {notFound && !member && (
-            <div className="ld-member-card ld-member-empty">
-              <div className="ld-empty-icon"><UserIcon /></div>
-              <div className="ld-empty-title">Member Not Found</div>
-              <div className="ld-empty-sub">No member found for "<strong>{query}</strong>"</div>
-              <button className="ld-act-btn ld-act-btn--primary" onClick={() => navigate('/members')}>
-                <UserPlusIcon /> Register New Member
-              </button>
-            </div>
-          )}
-
+          {/* Member Card if found */}
           {member && (
             <div className="ld-member-card">
-              {/* Member top */}
               <div className="ld-member-top">
-                <div className="ld-member-avatar">{member.initials}</div>
-                <div className="ld-member-info">
-                  <div className="ld-member-name-row">
-                    <span className="ld-member-name">{member.name}</span>
-                    <span className="ld-member-id">{member.id}</span>
-                    <span className={`ld-status-pill ld-status-pill--${member.status === 'ACTIVE' ? 'green' : 'red'}`}>
-                      {member.status}
-                    </span>
-                  </div>
-                  <div className="ld-member-meta">
-                    <span>{member.phone}</span>
-                    <span>·</span>
-                    <span>{member.type}</span>
-                    <span>·</span>
-                    <span>{member.dept}</span>
-                  </div>
-                  <div className="ld-member-validity">
-                    Membership valid until: <strong>{member.validity}</strong>
-                  </div>
+                <div className="ld-avatar">{member.name?.slice(0, 2).toUpperCase()}</div>
+                <div>
+                  <div className="ld-member-name">{member.name}</div>
+                  <div className="ld-member-meta">{member.mem_id || member.id} &bull; {member.affiliation || 'Member'}</div>
                 </div>
+                <span className="ld-status-pill">{member.status || 'ACTIVE'}</span>
               </div>
-
-              {/* Member stats */}
               <div className="ld-member-stats">
                 <div className="ld-mstat">
-                  <div className="ld-mstat-label">Borrowings</div>
-                  <div className="ld-mstat-val">{member.borrowed} / {member.maxBorrow} books</div>
-                  <div className="ld-mstat-bar">
-                    <div className="ld-mstat-fill" style={{ width: `${(member.borrowed / member.maxBorrow) * 100}%` }} />
-                  </div>
+                  <span className="ld-mstat-val">{member.borrowed || 0} / {member.max_books || 3}</span>
+                  <span className="ld-mstat-lbl">Books Borrowed</span>
                 </div>
-                <div className={`ld-mstat${member.fine > 0 ? ' ld-mstat--warn' : ''}`}>
-                  <div className="ld-mstat-label">Outstanding Fine</div>
-                  <div className={`ld-mstat-fine${member.fine > 0 ? ' ld-mstat-fine--red' : ''}`}>
-                    Rs. {member.fine.toFixed(2)}
-                  </div>
+                <div className="ld-mstat">
+                  <span className="ld-mstat-val ld-fine">Rs. {Number(member.outstanding || 0).toFixed(2)}</span>
+                  <span className="ld-mstat-lbl">Fines Due</span>
                 </div>
               </div>
-
-              {/* Books in possession */}
-              {member.books.length > 0 && (
-                <>
-                  <div className="ld-possession-label">
-                    Currently in Possession ({member.books.length})
-                  </div>
-                  <div className="ld-books-row">
-                    {member.books.map((b, i) => (
-                      <div key={i} className={`ld-book-chip${b.overdue ? ' ld-book-chip--overdue' : ''}`}>
-                        <div className="ld-book-chip-title">{b.title}</div>
-                        <div className="ld-book-chip-meta">{b.acc} · Due: {b.due}</div>
-                        {b.overdue && <span className="ld-overdue-tag">Overdue</span>}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-              {member.books.length === 0 && (
-                <div className="ld-no-books">No books currently borrowed</div>
-              )}
-
-              {/* Member actions */}
               <div className="ld-member-actions">
-                <button
-                  className="ld-act-btn ld-act-btn--primary"
-                  onClick={() => navigate('/issue')}
-                  disabled={member.borrowed >= member.maxBorrow}
-                >
+                <button className="ld-btn ld-btn--primary ld-btn--sm" onClick={() => navigate('/issue')}>
                   <IssueIcon /> Issue Book
-                  {member.borrowed >= member.maxBorrow && <span className="ld-act-tag">Limit Reached</span>}
                 </button>
-                <button
-                  className="ld-act-btn ld-act-btn--success"
-                  onClick={() => navigate('/returns')}
-                  disabled={member.books.length === 0}
-                >
-                  <CheckIcon /> Process Return
+                <button className="ld-btn ld-btn--success ld-btn--sm" onClick={() => navigate('/returns')}>
+                  <ReturnIcon /> Return Book
                 </button>
-                <button className="ld-act-btn ld-act-btn--outline" onClick={() => navigate('/members')}>
-                  <UserIcon /> View Profile
-                </button>
-                <button className="ld-act-btn ld-act-btn--ghost" onClick={clearSearch}>
-                  <XIcon /> Clear
-                </button>
+              </div>
+            </div>
+          )}
+
+          {notFound && (
+            <div className="ld-notfound-card">
+              <AlertIcon />
+              <div>
+                <strong>No member found for "{query}"</strong>
+                <p>Verify phone number or register a new member profile.</p>
               </div>
             </div>
           )}
 
         </div>
 
-        {/* ── RIGHT: Transactions + Overdue ── */}
+        {/* RIGHT: Tabs & Transactions */}
         <div className="ld-right-col">
-
-          {/* Transactions Table */}
-          <div className="ld-tx-card">
-            <div className="ld-tx-header">
-              <div className="ld-tx-tabs">
+          <div className="ld-desk-card">
+            <div className="ld-desk-header">
+              <div className="ld-tabs">
                 <button
-                  className={`ld-tx-tab${activeTab === 'issues' ? ' active' : ''}`}
+                  className={`ld-tab${activeTab === 'issues' ? ' active' : ''}`}
                   onClick={() => setActiveTab('issues')}
                 >
-                  <ArrowDownIcon /> Today's Issues
-                  <span className="ld-tx-count">{TODAYS_ISSUES.length}</span>
+                  Active Borrowings ({todaysIssues.length})
                 </button>
                 <button
-                  className={`ld-tx-tab${activeTab === 'returns' ? ' active' : ''}`}
+                  className={`ld-tab${activeTab === 'returns' ? ' active' : ''}`}
                   onClick={() => setActiveTab('returns')}
                 >
-                  <ReturnIcon /> Today's Returns
-                  <span className="ld-tx-count">{TODAYS_RETURNS.length}</span>
+                  Return History ({todaysReturns.length})
                 </button>
-              </div>
-              <button className="ld-tool-btn" onClick={() => navigate('/reports')}>
-                <ReportIcon /> Full Log
-              </button>
-            </div>
-
-            <table className="ld-table">
-              <thead>
-                <tr>
-                  <th>PATRON / ID</th>
-                  <th>BOOK TITLE</th>
-                  <th>TIME</th>
-                  <th>{activeTab === 'issues' ? 'DUE DATE' : 'FINE'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(activeTab === 'issues' ? TODAYS_ISSUES : TODAYS_RETURNS).map((r, i) => (
-                  <tr key={i}>
-                    <td>
-                      <div className="ld-table-name">{r.patron}</div>
-                      <div className="ld-table-sub">{r.memberId} · {r.type}</div>
-                    </td>
-                    <td>
-                      <div className="ld-table-book">{r.book}</div>
-                      <div className="ld-table-acc">{r.acc}</div>
-                    </td>
-                    <td className="ld-table-time">{r.time}</td>
-                    <td>
-                      {activeTab === 'issues' ? (
-                        <span className="ld-due-tag">{r.due}</span>
-                      ) : (
-                        <span className={r.fine > 0 ? 'ld-fine-red' : 'ld-fine-ok'}>
-                          Rs. {r.fine}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="ld-table-footer">
-              <span>● Real-time sync active</span>
-              <span>Last transaction: 2 mins ago</span>
-            </div>
-          </div>
-
-          {/* Overdue & Fines Panel */}
-          <div className="ld-overdue-card">
-            <div className="ld-overdue-header">
-              <div>
-                <span className="ld-overdue-title"><AlertIcon /> Overdue &amp; Fines</span>
-                <p className="ld-overdue-sub">Priority counter collection · Rs. {fineRate}/day</p>
-              </div>
-              <div className="ld-overdue-header-right">
-                <span className="ld-overdue-count">{overdueList.length} Pending</span>
                 <button
-                  className="ld-batch-btn"
-                  onClick={() => showToast(`SMS batch sent to ${overdueList.length} patrons`)}
+                  className={`ld-tab${activeTab === 'overdue' ? ' active' : ''}`}
+                  onClick={() => setActiveTab('overdue')}
                 >
-                  <BellIcon /> Batch SMS
+                  Overdue Recall ({overdueList.length})
                 </button>
               </div>
             </div>
 
-            <div className="ld-overdue-list">
-              {overdueList.length === 0 ? (
-                <div className="ld-overdue-empty">✓ No overdue borrowings — great work!</div>
-              ) : overdueList.map((o, i) => (
-                <div key={i} className="ld-overdue-item">
-                  <div className="ld-overdue-top-row">
-                    <div>
-                      <div className="ld-overdue-name">{o.name}</div>
-                      <div className="ld-overdue-meta">{o.phone} · {o.id}</div>
+            <div className="ld-desk-body">
+              {loading ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading records...</div>
+              ) : activeTab === 'issues' ? (
+                <div className="ld-tx-list">
+                  {todaysIssues.map(b => (
+                    <div key={b.id} className="ld-tx-item">
+                      <div className="ld-tx-av"><BookOpenIcon /></div>
+                      <div className="ld-tx-info">
+                        <div className="ld-tx-book">{b.book_title}</div>
+                        <div className="ld-tx-patron">{b.member_name} ({b.mem_id})</div>
+                      </div>
+                      <div className="ld-tx-due">
+                        <span>Due: {b.due_date}</span>
+                        <span className={`ld-badge ld-badge--${b.status.toLowerCase()}`}>{b.status}</span>
+                      </div>
                     </div>
-                    <span className={`ld-days-badge${o.days >= 14 ? ' ld-days-badge--red' : o.days >= 10 ? ' ld-days-badge--orange' : ' ld-days-badge--yellow'}`}>
-                      {o.days}d Late
-                    </span>
-                  </div>
-                  <div className="ld-overdue-book">{o.book}</div>
-                  <div className="ld-overdue-fine-row">
-                    <span className="ld-fine-amount">Rs. {o.fine.toFixed(2)} due</span>
-                    <div className="ld-overdue-btns">
-                      <button className="ld-sms-btn"     onClick={() => handleSms(o.name)}>
-                        <BellIcon /> SMS
-                      </button>
-                      <button className="ld-collect-btn" onClick={() => navigate('/fines')}>
-                        <DollarIcon /> Collect Fine
-                      </button>
-                      <button className="ld-return-btn"  onClick={() => handleCollect(o.id)}>
-                        <CheckIcon /> Mark Returned
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            <div className="ld-overdue-footer">
-              <span>Fine rate: Rs. {fineRate} / calendar day</span>
-              <button className="ld-fines-link" onClick={() => navigate('/fines')}>
-                View All Fines →
-              </button>
+              ) : activeTab === 'returns' ? (
+                <div className="ld-tx-list">
+                  {todaysReturns.map(b => (
+                    <div key={b.id} className="ld-tx-item">
+                      <div className="ld-tx-av ld-tx-av--green"><ReturnIcon /></div>
+                      <div className="ld-tx-info">
+                        <div className="ld-tx-book">{b.book_title}</div>
+                        <div className="ld-tx-patron">{b.member_name} ({b.mem_id})</div>
+                      </div>
+                      <div className="ld-tx-due">
+                        <span>Returned: {b.returned_date || b.issued_date}</span>
+                        <span className="ld-badge ld-badge--returned">{b.condition || 'Good'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="ld-tx-list">
+                  {overdueList.map(b => (
+                    <div key={b.id} className="ld-tx-item ld-tx-item--overdue">
+                      <div className="ld-tx-av ld-tx-av--red"><AlertIcon /></div>
+                      <div className="ld-tx-info">
+                        <div className="ld-tx-book">{b.book_title}</div>
+                        <div className="ld-tx-patron">{b.member_name} ({b.mem_id})</div>
+                      </div>
+                      <div className="ld-tx-due">
+                        <span style={{ color: '#ef4444', fontWeight: 600 }}>{b.overdue_days}d Overdue</span>
+                        <span style={{ color: '#ef4444' }}>Rs. {b.fine}.00</span>
+                      </div>
+                      <div className="ld-tx-actions">
+                        <button className="ld-tx-btn" onClick={() => handleSms(b.member_name)}>SMS</button>
+                        <button className="ld-tx-btn ld-tx-btn--collect" onClick={() => handleCollect(b.borrow_id || b.id)}>Collect</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-
         </div>
+
       </div>
+
     </div>
   )
 }

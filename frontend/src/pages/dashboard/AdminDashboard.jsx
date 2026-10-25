@@ -1,40 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { api } from '../../api/client'
 import './AdminDashboard.css'
-
-const borrowingData = [
-  { day: 'Mon', issued: 55, returned: 40 },
-  { day: 'Tue', issued: 70, returned: 52 },
-  { day: 'Wed', issued: 80, returned: 60 },
-  { day: 'Thu', issued: 75, returned: 58 },
-  { day: 'Fri', issued: 68, returned: 50 },
-  { day: 'Sat', issued: 30, returned: 25 },
-  { day: 'Sun', issued: 18, returned: 14 },
-]
-
-const availabilityData = [
-  { name: 'Available on Shelves', value: 1825, color: '#1e3a8a' },
-  { name: 'Currently Borrowed',   value: 625,  color: '#3b82f6' },
-  { name: 'Held in Reservation',  value: 85,   color: '#f59e0b' },
-  { name: 'Binding & Repair',     value: 15,   color: '#e2e8f0' },
-]
-
-const mostBorrowed = [
-  { rank: 1, title: 'A Course in Pure Mathematics', author: 'G.H. Hardy',          category: 'Mathematics',  circ: 118 },
-  { rank: 2, title: 'Principles of Economics',      author: 'N. Gregory Mankiw',   category: 'Economics',    circ: 105 },
-  { rank: 3, title: 'Modern Operating Systems',     author: 'Andrew S. Tanenbaum', category: 'Comp Science', circ: 97  },
-  { rank: 4, title: 'Microelectronic Circuits',     author: 'Sedra & Smith',        category: 'Engineering',  circ: 89  },
-  { rank: 5, title: 'Introduction to Algorithms',   author: 'Cormen, Leiserson',    category: 'Computing',    circ: 83  },
-]
-
-const recentActivity = [
-  { type: 'member',  color: '#10b981', text: 'New member registered',   detail: 'Kasun Silva (078 445 6678) registered by Lib. Chaminda', time: '5m ago'  },
-  { type: 'issue',   color: '#3b82f6', text: 'Book issued',             detail: 'Calculus Vol. II issued to Dilani Wickrama (072 119 8833)',  time: '18m ago' },
-  { type: 'return',  color: '#10b981', text: 'Book returned',           detail: 'Macroeconomics returned on-time by S. Rathnayake',           time: '32m ago' },
-  { type: 'fine',    color: '#f59e0b', text: 'Fine payment recorded',   detail: 'Rs. 12 late fee received from H.M. Farook (12d overdue)',    time: '1h ago'  },
-  { type: 'catalog', color: '#6366f1', text: 'New catalog accession',   detail: 'Artificial Intelligence (Copy #6) added to catalog',         time: '2h ago'  },
-]
 
 function StatCard({ label, value, sub, subColor, icon, danger }) {
   return (
@@ -65,23 +33,126 @@ const CATEGORY_COLORS = {
   'Comp Science':'#8b5cf6',
   Engineering:   '#f59e0b',
   Computing:     '#ef4444',
+  General:       '#0891b2',
 }
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('This Week')
-  const [overdueAlerts, setOverdueAlerts] = useState([
-    { name: 'K.M. Bandara',    phone: '077 123 4567', days: 14, fine: 14, book: 'Data Structures in C++' },
-    { name: 'N.S. Fernando',   phone: '071 987 6543', days: 10, fine: 10, book: 'Engineering Mechanics'   },
-    { name: 'M.A. Perera',     phone: '076 543 2198', days: 8,  fine: 8,  book: 'Clinical Pharmacology'   },
-    { name: 'T.H. Jayasinghe', phone: '079 332 1144', days: 6,  fine: 6,  book: 'Constitutional Law of SL'},
-  ])
-  const [smsToast, setSmsToast] = useState(false)
+  const [activeTab, setActiveTab]         = useState('This Month')
+  const [loading, setLoading]             = useState(true)
+  const [smsToast, setSmsToast]           = useState(false)
+
+  const [stats, setStats] = useState({
+    totalBooks: 0,
+    availBooks: 0,
+    borrowedBooks: 0,
+    totalMembers: 0,
+    overdueLoans: 0,
+    unpaidFines: 0,
+  })
+
+  const [chartData, setChartData]         = useState([])
+  const [availability, setAvailability]   = useState([])
+  const [popularBooks, setPopularBooks]   = useState([])
+  const [overdueAlerts, setOverdueAlerts] = useState([])
+  const [activity, setActivity]           = useState([])
+
+  const loadDashboard = useCallback(async () => {
+    try {
+      setLoading(true)
+      const [books, members, borrows, fines, popular, overview] = await Promise.all([
+        api.getBooks().catch(() => []),
+        api.getMembers().catch(() => []),
+        api.getBorrowings().catch(() => []),
+        api.getFines().catch(() => []),
+        api.getReportPopular().catch(() => []),
+        api.getReportOverview({ filter: activeTab }).catch(() => ({ monthly: [] })),
+      ])
+
+      const totalCopies    = books.reduce((s, b) => s + (b.total || 0), 0)
+      const availCopies    = books.reduce((s, b) => s + (b.available || 0), 0)
+      const borrowedCopies = books.reduce((s, b) => s + Math.max(0, (b.total || 0) - (b.available || 0)), 0)
+      const maintCopies    = books.filter(b => b.status === 'MAINTENANCE').reduce((s, b) => s + (b.total || 0), 0)
+      const overdueCount   = borrows.filter(b => b.status === 'OVERDUE').length
+      const unpaidSum      = fines.filter(f => f.status === 'UNPAID').reduce((s, f) => s + (f.amount || 0), 0)
+
+      setStats({
+        totalBooks:    totalCopies,
+        availBooks:    availCopies,
+        borrowedBooks: borrowedCopies,
+        totalMembers:  members.length,
+        overdueLoans:  overdueCount,
+        unpaidFines:   unpaidSum,
+      })
+
+      // Availability Pie
+      setAvailability([
+        { name: 'Available on Shelves', value: availCopies,    color: '#1e3a8a' },
+        { name: 'Currently Borrowed',   value: borrowedCopies, color: '#3b82f6' },
+        { name: 'Under Maintenance',    value: maintCopies,    color: '#f59e0b' },
+      ].filter(d => d.value > 0))
+
+      // Popular books
+      setPopularBooks(popular.slice(0, 5).map((p, i) => ({
+        rank:     i + 1,
+        title:    p.title,
+        author:   p.author,
+        category: p.category || 'General',
+        circ:     p.borrowed || 0,
+      })))
+
+      // Overdue alerts
+      const od = borrows
+        .filter(b => b.status === 'OVERDUE')
+        .slice(0, 6)
+        .map(b => ({
+          name:  b.member_name || 'Member',
+          phone: b.mem_id || 'MEM',
+          days:  b.overdue_days || 0,
+          fine:  b.fine || 0,
+          book:  b.book_title || 'Book',
+        }))
+      setOverdueAlerts(od)
+
+      // Recent activity
+      const rec = borrows.slice(0, 6).map(b => {
+        const isReturn = b.status === 'RETURNED'
+        const isOverdue = b.status === 'OVERDUE'
+        return {
+          type:   isReturn ? 'return' : isOverdue ? 'fine' : 'issue',
+          color:  isReturn ? '#10b981' : isOverdue ? '#ef4444' : '#3b82f6',
+          text:   isReturn ? 'Book returned' : isOverdue ? 'Overdue notice' : 'Book issued',
+          detail: `"${b.book_title}" — ${b.member_name} (${b.borrow_id})`,
+          time:   b.returned_date || b.issued_date || 'Recent',
+        }
+      })
+      setActivity(rec)
+
+      // Borrowing activity chart
+      const chartPoints = (overview.monthly || []).map(m => ({
+        day:      m.month,
+        issued:   m.issued || 0,
+        returned: m.returned || 0,
+      }))
+      setChartData(chartPoints.length ? chartPoints : [
+        { day: 'No Data', issued: 0, returned: 0 }
+      ])
+
+    } catch (err) {
+      console.error('Failed to load dashboard:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
 
   const handleClear = (name) => {
     setOverdueAlerts(prev => prev.filter(a => a.name !== name))
   }
-  const handleSms = (name) => {
+  const handleSms = () => {
     setSmsToast(true)
     setTimeout(() => setSmsToast(false), 2500)
   }
@@ -89,6 +160,10 @@ export default function AdminDashboard() {
     setSmsToast(true)
     setTimeout(() => setSmsToast(false), 2500)
   }
+
+  const compliance = stats.totalBooks > 0
+    ? Math.round((stats.availBooks / stats.totalBooks) * 100)
+    : 0
 
   return (
     <div className="dash">
@@ -112,12 +187,12 @@ export default function AdminDashboard() {
 
       {/* KPI Cards */}
       <div className="stat-grid">
-        <StatCard label="TOTAL BOOKS"     value="2,450" sub=" +12 this month"      subColor="#10b981" icon={<BookIcon />}   />
-        <StatCard label="AVAILABLE BOOKS" value="1,825" sub="74.5% circulation"    subColor="#64748b" icon={<CheckIcon />}  />
-        <StatCard label="BORROWED BOOKS"  value="625"   sub="Across active faculty" subColor="#64748b" icon={<CopyIcon />}   />
-        <StatCard label="TOTAL MEMBERS"   value="1,240" sub=" +34 new this week"   subColor="#10b981" icon={<UsersIcon />}  />
-        <StatCard label="OVERDUE BOOKS"   value="48"    sub="+3 requiring notice"   subColor="#ef4444" icon={<AlertIcon />}  danger />
-        <StatCard label="UNPAID FINES"    value="Rs. 8,750" sub="Rs. 1/day default rate" subColor="#64748b" icon={<DollarIcon />} />
+        <StatCard label="TOTAL COPIES"     value={stats.totalBooks} sub="Catalog inventory"         subColor="#10b981" icon={<BookIcon />}   />
+        <StatCard label="AVAILABLE BOOKS" value={stats.availBooks} sub={`${compliance}% on shelf`}   subColor="#64748b" icon={<CheckIcon />}  />
+        <StatCard label="BORROWED BOOKS"  value={stats.borrowedBooks} sub="Active loans"            subColor="#64748b" icon={<CopyIcon />}   />
+        <StatCard label="TOTAL MEMBERS"   value={stats.totalMembers} sub="Enrolled patrons"         subColor="#10b981" icon={<UsersIcon />}  />
+        <StatCard label="OVERDUE BOOKS"   value={stats.overdueLoans} sub="Requiring recall notice"   subColor="#ef4444" icon={<AlertIcon />}  danger={stats.overdueLoans > 0} />
+        <StatCard label="UNPAID FINES"    value={`Rs. ${stats.unpaidFines}.00`} sub="Recorded fines ledger" subColor="#64748b" icon={<DollarIcon />} />
       </div>
 
       {/* Charts Row */}
@@ -128,10 +203,10 @@ export default function AdminDashboard() {
           <div className="chart-card-header">
             <div>
               <span className="chart-card-title">Borrowing Activity</span>
-              <span className="chart-live-badge">Live System</span>
+              <span className="chart-live-badge">Live SQLite Backend</span>
             </div>
             <div className="chart-tabs">
-              {['Today','This Week','This Month','This Year'].map(t => (
+              {['Today','This Week','This Month','This Year','All Time'].map(t => (
                 <button
                   key={t}
                   className={`chart-tab${activeTab === t ? ' active' : ''}`}
@@ -145,7 +220,7 @@ export default function AdminDashboard() {
             <span className="legend-dot" style={{ background: '#10b981' }} /> Books Returned
           </div>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={borrowingData} barCategoryGap="30%" barGap={4}>
+            <BarChart data={chartData} barCategoryGap="30%" barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
               <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
@@ -155,8 +230,8 @@ export default function AdminDashboard() {
             </BarChart>
           </ResponsiveContainer>
           <div className="chart-footer">
-            <span><BarIcon /> Average Daily Issues: <strong>42 books/day</strong></span>
-            <span><CheckIcon /> On-time Return Rate: <strong>92.4% compliance</strong></span>
+            <span><BarIcon /> Active Borrowings: <strong>{stats.borrowedBooks} books</strong></span>
+            <span><CheckIcon /> Shelf Availability: <strong>{compliance}% on shelf</strong></span>
           </div>
         </div>
 
@@ -169,21 +244,23 @@ export default function AdminDashboard() {
           <div className="pie-wrap">
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
-                <Pie data={availabilityData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={2} dataKey="value">
-                  {availabilityData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                <Pie data={availability} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={2} dataKey="value">
+                  {availability.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                 </Pie>
-                <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" fontSize={22} fontWeight={800} fill="#1e293b">2,450</text>
+                <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" fontSize={22} fontWeight={800} fill="#1e293b">{stats.totalBooks}</text>
                 <text x="50%" y="58%" textAnchor="middle" dominantBaseline="middle" fontSize={10} fill="#94a3b8">TOTAL COPIES</text>
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div className="pie-legend">
-            {availabilityData.map((d, i) => (
+            {availability.map((d, i) => (
               <div key={i} className="pie-legend-row">
                 <span className="pie-legend-dot" style={{ background: d.color }} />
                 <span className="pie-legend-label">{d.name}</span>
                 <span className="pie-legend-value">{d.value.toLocaleString()}</span>
-                <span className="pie-legend-pct" style={{ color: d.color }}>{((d.value / 2550) * 100).toFixed(1)}%</span>
+                <span className="pie-legend-pct" style={{ color: d.color }}>
+                  {stats.totalBooks > 0 ? ((d.value / stats.totalBooks) * 100).toFixed(1) : 0}%
+                </span>
               </div>
             ))}
           </div>
@@ -198,7 +275,7 @@ export default function AdminDashboard() {
           <div className="bottom-card-header">
             <div>
               <span className="bottom-card-title"><BarIcon /> Most Borrowed Books</span>
-              <p className="bottom-card-sub">Academic year high circulation volumes</p>
+              <p className="bottom-card-sub">Live circulation volumes</p>
             </div>
             <button className="view-all-btn" onClick={() => navigate('/reports')}>View All</button>
           </div>
@@ -207,24 +284,28 @@ export default function AdminDashboard() {
               <tr><th>#</th><th>Title</th><th>Category</th><th>Circ.</th></tr>
             </thead>
             <tbody>
-              {mostBorrowed.map(b => (
-                <tr key={b.rank}>
-                  <td><span className="rank">#{b.rank}</span></td>
-                  <td>
-                    <div className="book-title">{b.title}</div>
-                    <div className="book-author">{b.author}</div>
-                  </td>
-                  <td>
-                    <span className="cat-badge" style={{ background: (CATEGORY_COLORS[b.category] || '#64748b') + '18', color: CATEGORY_COLORS[b.category] || '#64748b' }}>
-                      {b.category}
-                    </span>
-                  </td>
-                  <td><span className="circ-num">{b.circ}</span></td>
-                </tr>
-              ))}
+              {popularBooks.length === 0 ? (
+                <tr><td colSpan="4" style={{ textAlign: 'center', padding: '1.5rem', color: '#94a3b8' }}>No circulation history yet</td></tr>
+              ) : (
+                popularBooks.map(b => (
+                  <tr key={b.rank}>
+                    <td><span className="rank">#{b.rank}</span></td>
+                    <td>
+                      <div className="book-title">{b.title}</div>
+                      <div className="book-author">{b.author}</div>
+                    </td>
+                    <td>
+                      <span className="cat-badge" style={{ background: (CATEGORY_COLORS[b.category] || '#64748b') + '18', color: CATEGORY_COLORS[b.category] || '#64748b' }}>
+                        {b.category}
+                      </span>
+                    </td>
+                    <td><span className="circ-num">{b.circ}</span></td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
-          <div className="table-footer">Displaying Top 5 of 2,450 titles &nbsp;&nbsp; Dewey Decimal Filter: ALL</div>
+          <div className="table-footer">Displaying Top 5 titles &nbsp;&bull;&nbsp; Live Database Sync</div>
         </div>
 
         {/* Overdue Alerts */}
@@ -250,18 +331,20 @@ export default function AdminDashboard() {
                 </div>
                 <div className="overdue-bottom">
                   <span className="overdue-book">{a.book}</span>
-                  <span className="overdue-fine">Rs. {a.fine}</span>
+                  <span className="overdue-fine">Rs. {a.fine}.00</span>
                 </div>
                 <div className="overdue-btns">
-                  <button className="sms-btn"   onClick={() => handleSms(a.name)}>SMS</button>
+                  <button className="sms-btn"   onClick={handleSms}>SMS</button>
                   <button className="clear-btn" onClick={() => handleClear(a.name)}>Clear</button>
                 </div>
               </div>
             ))}
           </div>
-          <button className="launch-sms-btn" onClick={handleBatchSms}>
-            Launch Automated Batch SMS Reminder ({overdueAlerts.length} patrons)
-          </button>
+          {overdueAlerts.length > 0 && (
+            <button className="launch-sms-btn" onClick={handleBatchSms}>
+              Launch Automated Batch SMS Reminder ({overdueAlerts.length} patrons)
+            </button>
+          )}
         </div>
 
         {/* Recent Activity */}
@@ -272,18 +355,22 @@ export default function AdminDashboard() {
           </div>
           <p className="bottom-card-sub" style={{ marginBottom: 12 }}>Real-time audit log of campus circulation</p>
           <div className="activity-list">
-            {recentActivity.map((a, i) => (
-              <div key={i} className="activity-item">
-                <span className="activity-dot" style={{ background: a.color }} />
-                <div className="activity-body">
-                  <div className="activity-title">{a.text}</div>
-                  <div className="activity-detail">{a.detail}</div>
-                  <div className="activity-time">{a.time}</div>
+            {activity.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No activity records yet</div>
+            ) : (
+              activity.map((a, i) => (
+                <div key={i} className="activity-item">
+                  <span className="activity-dot" style={{ background: a.color }} />
+                  <div className="activity-body">
+                    <div className="activity-title">{a.text}</div>
+                    <div className="activity-detail">{a.detail}</div>
+                    <div className="activity-time">{a.time}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-          <button className="audit-btn" onClick={() => navigate('/reports')}>Full Audit Log</button>
+          <button className="audit-btn" onClick={() => navigate('/borrowings')}>Full Borrowing Log</button>
         </div>
 
       </div>

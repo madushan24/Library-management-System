@@ -1,14 +1,6 @@
-﻿import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { api } from '../../api/client'
 import './BorrowingsPage.css'
-
-const records = [
-  { id: 'BR-001', member: 'Kasun Perera',    memberId: 'MEM-881', book: 'Discrete Mathematics & Its Applications', issued: '08/09/2026', due: '15/09/2026', returned: '-',         days: 0,  fine: 0,  status: 'BORROWED' },
-  { id: 'BR-002', member: 'N.S. Fernando',   memberId: 'MEM-112', book: 'Engineering Mechanics: Statics',           issued: '01/09/2026', due: '08/09/2026', returned: '-',         days: 10, fine: 10, status: 'OVERDUE'  },
-  { id: 'BR-003', member: 'Dilani Wickrama', memberId: 'MEM-084', book: 'Modern Operating Systems (4th Ed)',        issued: '20/08/2026', due: '27/08/2026', returned: '27/08/2026', days: 0,  fine: 0,  status: 'RETURNED' },
-  { id: 'BR-004', member: 'Sahan Alwis',     memberId: 'MEM-404', book: 'Digital Signal Processing Concepts',      issued: '10/09/2026', due: '17/09/2026', returned: '-',         days: 0,  fine: 0,  status: 'BORROWED' },
-  { id: 'BR-005', member: 'K.M. Bandara',    memberId: 'MEM-342', book: 'Data Structures in C++ (2nd Ed)',         issued: '25/08/2026', due: '01/09/2026', returned: '-',         days: 14, fine: 14, status: 'OVERDUE'  },
-  { id: 'BR-006', member: 'Fathima Rizna',   memberId: 'MEM-405', book: 'Microelectronic Circuits',                issued: '05/09/2026', due: '12/09/2026', returned: '11/09/2026', days: 0,  fine: 0,  status: 'RETURNED' },
-]
 
 const S = {
   BORROWED: { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
@@ -51,8 +43,39 @@ const CheckIcon = () => (
 )
 
 export default function BorrowingsPage() {
+  const [records, setRecords]       = useState([])
+  const [loading, setLoading]       = useState(true)
   const [search, setSearch]         = useState('')
   const [statusFilter, setStatus]   = useState('All Status')
+
+  const loadBorrowings = useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await api.getBorrowings()
+      const formatted = data.map(b => ({
+        id:       b.borrow_id || `BR-${String(b.id).padStart(3, '0')}`,
+        dbId:     b.id,
+        member:   b.member_name || 'Member',
+        memberId: b.mem_id || 'MEM',
+        book:     b.book_title || 'Book',
+        issued:   b.issued_date || '-',
+        due:      b.due_date || '-',
+        returned: b.returned_date || '-',
+        days:     b.overdue_days || 0,
+        fine:     b.fine || 0,
+        status:   b.status || 'BORROWED',
+      }))
+      setRecords(formatted)
+    } catch (err) {
+      console.error('Failed to load borrowings:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadBorrowings()
+  }, [loadBorrowings])
 
   const totalBorrowings = records.length
   const totalBorrowed   = records.filter(r => r.status === 'BORROWED').length
@@ -61,10 +84,10 @@ export default function BorrowingsPage() {
 
   const filtered = records.filter(r => {
     const q = search.toLowerCase()
-    const matchSearch = r.id.toLowerCase().includes(q) ||
-      r.member.toLowerCase().includes(q) ||
-      r.memberId.toLowerCase().includes(q) ||
-      r.book.toLowerCase().includes(q)
+    const matchSearch = (r.id || '').toLowerCase().includes(q) ||
+      (r.member || '').toLowerCase().includes(q) ||
+      (r.memberId || '').toLowerCase().includes(q) ||
+      (r.book || '').toLowerCase().includes(q)
     const matchStatus = statusFilter === 'All Status' || r.status === statusFilter
     return matchSearch && matchStatus
   })
@@ -135,57 +158,61 @@ export default function BorrowingsPage() {
       </div>
 
       <div className="brw-card">
-        <table className="brw-table">
-          <thead>
-            <tr>
-              <th>BORROW ID</th>
-              <th>MEMBER</th>
-              <th>BOOK</th>
-              <th>ISSUE DATE</th>
-              <th>DUE DATE</th>
-              <th>RETURN DATE</th>
-              <th>OVERDUE DAYS</th>
-              <th>FINE</th>
-              <th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
+        {loading ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading borrowings...</div>
+        ) : (
+          <table className="brw-table">
+            <thead>
               <tr>
-                <td colSpan="9" className="brw-empty">No records found for "{search}"</td>
+                <th>BORROW ID</th>
+                <th>MEMBER</th>
+                <th>BOOK</th>
+                <th>ISSUE DATE</th>
+                <th>DUE DATE</th>
+                <th>RETURN DATE</th>
+                <th>OVERDUE DAYS</th>
+                <th>FINE</th>
+                <th>STATUS</th>
               </tr>
-            ) : (
-              filtered.map(r => {
-                const st = S[r.status]
-                return (
-                  <tr key={r.id}>
-                    <td><span className="brw-id">{r.id}</span></td>
-                    <td>
-                      <div className="brw-name">{r.member}</div>
-                      <div className="brw-sub2">{r.memberId}</div>
-                    </td>
-                    <td className="brw-book">{r.book}</td>
-                    <td className="brw-date">{r.issued}</td>
-                    <td className="brw-date">{r.due}</td>
-                    <td className="brw-date">{r.returned}</td>
-                    <td>
-                      <span className={r.days > 0 ? 'brw-days-red' : 'brw-days-ok'}>{r.days}</span>
-                    </td>
-                    <td>
-                      <span className={r.fine > 0 ? 'brw-fine-red' : 'brw-fine-ok'}>Rs. {r.fine}</span>
-                    </td>
-                    <td>
-                      <span className="brw-status" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>
-                        <span className="brw-sdot" style={{ background: st.color }} />
-                        {r.status}
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="brw-empty">No records found for "{search}"</td>
+                </tr>
+              ) : (
+                filtered.map(r => {
+                  const st = S[r.status] || S.BORROWED
+                  return (
+                    <tr key={r.id}>
+                      <td><span className="brw-id">{r.id}</span></td>
+                      <td>
+                        <div className="brw-name">{r.member}</div>
+                        <div className="brw-sub2">{r.memberId}</div>
+                      </td>
+                      <td className="brw-book">{r.book}</td>
+                      <td className="brw-date">{r.issued}</td>
+                      <td className="brw-date">{r.due}</td>
+                      <td className="brw-date">{r.returned}</td>
+                      <td>
+                        <span className={r.days > 0 ? 'brw-days-red' : 'brw-days-ok'}>{r.days}</span>
+                      </td>
+                      <td>
+                        <span className={r.fine > 0 ? 'brw-fine-red' : 'brw-fine-ok'}>Rs. {r.fine}</span>
+                      </td>
+                      <td>
+                        <span className="brw-status" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>
+                          <span className="brw-sdot" style={{ background: st.color }} />
+                          {r.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        )}
         <div className="brw-footer">
           <span>Showing {filtered.length} of {records.length} records &mdash; permanent history, never deleted</span>
         </div>
