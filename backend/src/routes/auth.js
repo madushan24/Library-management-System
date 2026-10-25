@@ -1,7 +1,7 @@
-const router  = require('express').Router()
-const bcrypt  = require('bcryptjs')
-const jwt     = require('jsonwebtoken')
-const db      = require('../db')
+const router = require('express').Router()
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const db = require('../db')
 const { requireAuth } = require('../middleware/auth')
 
 /* POST /api/auth/login */
@@ -21,17 +21,17 @@ router.post('/login', (req, res) => {
   db.prepare(`UPDATE users SET last_login = datetime('now') WHERE id = ?`).run(user.id)
 
   const payload = { id: user.id, lib_id: user.lib_id, name: user.name, username: user.username, role: user.role }
-  const token   = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' })
+  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '8h' })
 
   res.json({
     token,
     user: {
-      id:       user.id,
-      lib_id:   user.lib_id,
-      name:     user.name,
+      id: user.id,
+      lib_id: user.lib_id,
+      name: user.name,
       username: user.username,
-      email:    user.email,
-      role:     user.role,
+      email: user.email,
+      role: user.role,
       initials: user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
     }
   })
