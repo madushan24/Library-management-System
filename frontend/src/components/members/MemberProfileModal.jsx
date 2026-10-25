@@ -1,19 +1,6 @@
-﻿import './MemberProfileModal.css'
-
-const HISTORY = {
-  'MEM-001': [
-    { id: 'BR-001', book: 'Discrete Mathematics & Its Applications', isbn: '978-0-07-352332-2', issued: '08/09/2026', due: '15/09/2026', returned: '-',         days: 0, fine: 0,  status: 'BORROWED' },
-    { id: 'BR-002', book: 'Algorithm Design: Foundations Vol. II',    isbn: '978-0-13-143542-6', issued: '01/08/2026', due: '08/08/2026', returned: '06/08/2026', days: 0, fine: 0,  status: 'RETURNED' },
-    { id: 'BR-003', book: 'Introduction to Algorithms (CLRS)',        isbn: '978-0-26-203384-8', issued: '10/07/2026', due: '17/07/2026', returned: '20/07/2026', days: 3, fine: 3,  status: 'RETURNED' },
-  ],
-  'MEM-112': [
-    { id: 'BR-010', book: 'Engineering Mechanics: Statics',           isbn: '978-0-13-291554-9', issued: '01/09/2026', due: '08/09/2026', returned: '-',         days: 10, fine: 10, status: 'OVERDUE'  },
-    { id: 'BR-011', book: 'Fluid Mechanics',                          isbn: '978-0-07-338032-2', issued: '10/08/2026', due: '17/08/2026', returned: '15/08/2026', days: 0,  fine: 0,  status: 'RETURNED' },
-  ],
-  'MEM-342': [
-    { id: 'BR-020', book: 'Data Structures in C++ (2nd Ed)',          isbn: '978-0-13-315912-0', issued: '25/08/2026', due: '01/09/2026', returned: '-',         days: 14, fine: 14, status: 'OVERDUE'  },
-  ],
-}
+import { useState, useEffect } from 'react'
+import { api } from '../../api/client'
+import './MemberProfileModal.css'
 
 const STATUS_STYLE = {
   ACTIVE:    { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
@@ -36,15 +23,45 @@ const CalIcon   = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="no
 const BookIcon  = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
 const IssueIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
 
-export default function MemberProfileModal({ member, onClose }) {
+export default function MemberProfileModal({ member, onClose, onIssue }) {
+  const [profileData, setProfileData] = useState(null)
+  const [loading, setLoading]         = useState(true)
+
+  useEffect(() => {
+    if (!member) return
+    const idToFetch = member.dbId || member.id
+    api.getMember(idToFetch)
+      .then(data => {
+        setProfileData(data)
+      })
+      .catch(err => {
+        console.error('Failed to fetch member details:', err)
+      })
+      .finally(() => setLoading(false))
+  }, [member])
+
   if (!member) return null
 
-  const history        = HISTORY[member.id] || []
+  const m = profileData || member
+  const rawHistory     = profileData?.history || []
+  const history = rawHistory.map(h => ({
+    id:       h.borrow_id || `BR-${h.id}`,
+    book:     h.book_title || 'Book',
+    isbn:     h.book_id || '',
+    issued:   h.issued_date || '-',
+    due:      h.due_date || '-',
+    returned: h.returned_date || '-',
+    days:     h.overdue_days || 0,
+    fine:     h.fine || 0,
+    status:   h.status || 'BORROWED',
+  }))
+
   const totalBorrowed  = history.length
   const totalReturned  = history.filter(h => h.status === 'RETURNED').length
   const totalOverdue   = history.filter(h => h.status === 'OVERDUE').length
-  const totalFine      = history.reduce((s, h) => s + h.fine, 0)
-  const st             = STATUS_STYLE[member.status] || STATUS_STYLE.ACTIVE
+  const totalFine      = history.reduce((s, h) => s + (h.fine || 0), 0)
+  const outstanding    = Number(m.outstanding) || 0
+  const st             = STATUS_STYLE[m.status] || STATUS_STYLE.ACTIVE
 
   return (
     <div className="mpm-backdrop" onClick={onClose}>
@@ -59,21 +76,27 @@ export default function MemberProfileModal({ member, onClose }) {
 
           <div className="mpm-profile-card">
             <div className="mpm-avatar-wrap">
-              <div className="mpm-avatar" style={{ background: member.color }}>{member.initials}</div>
+              <div className="mpm-avatar" style={{ background: member.color || '#3b82f6' }}>
+                {member.initials || m.name?.slice(0, 2).toUpperCase()}
+              </div>
               <span className="mpm-status-dot" style={{ background: st.color }} />
             </div>
             <div className="mpm-profile-info">
-              <div className="mpm-name">{member.name}</div>
-              <div className="mpm-affil">{member.affil}</div>
+              <div className="mpm-name">{m.name}</div>
+              <div className="mpm-affil">{m.affiliation || m.affil || 'Library Member'}</div>
               <div className="mpm-badges-row">
-                <span className="mpm-id-badge">{member.id}</span>
+                <span className="mpm-id-badge">{m.mem_id || m.id}</span>
                 <span className="mpm-status-badge" style={{ color: st.color, background: st.bg, border: `1px solid ${st.border}` }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: st.color, display: 'inline-block', marginRight: 5 }} />
-                  {member.status}
+                  {m.status}
                 </span>
               </div>
             </div>
-            <button className="mpm-issue-btn"><IssueIcon /> Issue Book</button>
+            {onIssue && (
+              <button className="mpm-issue-btn" onClick={() => onIssue(m)}>
+                <IssueIcon /> Issue Book
+              </button>
+            )}
           </div>
 
           <div className="mpm-section-card">
@@ -83,42 +106,42 @@ export default function MemberProfileModal({ member, onClose }) {
                 <span className="mpm-detail-icon"><PhoneIcon /></span>
                 <div>
                   <div className="mpm-detail-label">Phone</div>
-                  <div className="mpm-detail-val">{member.phone}</div>
+                  <div className="mpm-detail-val">{m.phone}</div>
                 </div>
               </div>
               <div className="mpm-detail-item">
                 <span className="mpm-detail-icon"><MailIcon /></span>
                 <div>
                   <div className="mpm-detail-label">Email</div>
-                  <div className="mpm-detail-val">{member.email || '--'}</div>
+                  <div className="mpm-detail-val">{m.email || '--'}</div>
                 </div>
               </div>
               <div className="mpm-detail-item">
                 <span className="mpm-detail-icon"><IdIcon /></span>
                 <div>
                   <div className="mpm-detail-label">NIC / Student ID</div>
-                  <div className="mpm-detail-val">{member.nic || '--'}</div>
+                  <div className="mpm-detail-val">{m.nic || '--'}</div>
                 </div>
               </div>
               <div className="mpm-detail-item">
                 <span className="mpm-detail-icon"><CalIcon /></span>
                 <div>
                   <div className="mpm-detail-label">Registered</div>
-                  <div className="mpm-detail-val">{member.registered}</div>
+                  <div className="mpm-detail-val">{m.registered || m.created_at?.slice(0, 10)}</div>
                 </div>
               </div>
               <div className="mpm-detail-item">
                 <span className="mpm-detail-icon"><MapIcon /></span>
                 <div>
-                  <div className="mpm-detail-label">City</div>
-                  <div className="mpm-detail-val">{member.city || 'Padiyathalawa'}</div>
+                  <div className="mpm-detail-label">Address</div>
+                  <div className="mpm-detail-val">{m.address || 'Padiyathalawa'}</div>
                 </div>
               </div>
               <div className="mpm-detail-item">
                 <span className="mpm-detail-icon"><BookIcon /></span>
                 <div>
                   <div className="mpm-detail-label">Currently Borrowed</div>
-                  <div className="mpm-detail-val">{member.borrowed} / {member.maxBooks} books</div>
+                  <div className="mpm-detail-val">{m.borrowed || 0} / {m.max_books || m.maxBooks || 3} books</div>
                 </div>
               </div>
             </div>
@@ -138,11 +161,11 @@ export default function MemberProfileModal({ member, onClose }) {
               <div className="mpm-stat-label">Overdue</div>
             </div>
             <div className="mpm-stat">
-              <div className="mpm-stat-val mpm-orange">{member.borrowed}</div>
+              <div className="mpm-stat-val mpm-orange">{m.borrowed || 0}</div>
               <div className="mpm-stat-label">Active Loans</div>
             </div>
             <div className="mpm-stat mpm-stat--fine">
-              <div className="mpm-stat-val mpm-red">Rs. {member.outstanding.toFixed(2)}</div>
+              <div className="mpm-stat-val mpm-red">Rs. {outstanding.toFixed(2)}</div>
               <div className="mpm-stat-label">Outstanding Fine</div>
             </div>
             <div className="mpm-stat">
@@ -156,7 +179,9 @@ export default function MemberProfileModal({ member, onClose }) {
               <div className="mpm-section-title">Borrowing History</div>
               <span className="mpm-history-note">Permanent record &mdash; never deleted</span>
             </div>
-            {history.length === 0 ? (
+            {loading ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading history...</div>
+            ) : history.length === 0 ? (
               <div className="mpm-empty">No borrowing history found.</div>
             ) : (
               <table className="mpm-table">
@@ -168,7 +193,7 @@ export default function MemberProfileModal({ member, onClose }) {
                 </thead>
                 <tbody>
                   {history.map(h => {
-                    const bs = BORROW_STYLE[h.status]
+                    const bs = BORROW_STYLE[h.status] || BORROW_STYLE.BORROWED
                     return (
                       <tr key={h.id}>
                         <td><span className="mpm-bid">{h.id}</span></td>
