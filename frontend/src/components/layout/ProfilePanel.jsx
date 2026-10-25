@@ -27,10 +27,17 @@ const UserIcon = () => (
   </svg>
 )
 
-export default function ProfilePanel({ session, onClose }) {
+export default function ProfilePanel({ session: sessionProp, onClose }) {
   const panelRef = useRef(null)
   const navigate = useNavigate()
-  const roleInfo = ROLE_LABELS[session.role] || { label: session.role, color: 'blue' }
+
+  /* fallback: read from sessionStorage if no prop passed */
+  const session = sessionProp || (() => {
+    try { return JSON.parse(sessionStorage.getItem('lms_user') || '{}') } catch { return {} }
+  })()
+
+  const initials = session.initials || session.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'AD'
+  const roleInfo = ROLE_LABELS[session.role] || { label: session.role || 'Staff', color: 'blue' }
 
   useEffect(() => {
     function handleClick(e) {
@@ -57,9 +64,9 @@ export default function ProfilePanel({ session, onClose }) {
     <div className="pp-panel" ref={panelRef}>
       {/* Avatar + name */}
       <div className="pp-identity">
-        <div className="pp-avatar">{session.initials}</div>
+        <div className="pp-avatar">{initials}</div>
         <div className="pp-info">
-          <div className="pp-name">{session.name}</div>
+          <div className="pp-name">{session.name || 'User'}</div>
           <span className={`pp-role pp-role--${roleInfo.color}`}>{roleInfo.label}</span>
         </div>
       </div>
@@ -68,7 +75,7 @@ export default function ProfilePanel({ session, onClose }) {
       <div className="pp-details">
         <div className="pp-row">
           <span className="pp-row-label">Username</span>
-          <span className="pp-row-val">{session.username || session.name.split(' ')[0].toLowerCase()}</span>
+          <span className="pp-row-val">{session.username || session.name?.split(' ')[0]?.toLowerCase() || '—'}</span>
         </div>
         <div className="pp-row">
           <span className="pp-row-label">Role</span>
