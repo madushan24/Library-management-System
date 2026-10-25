@@ -7,8 +7,8 @@ const STATUS_STYLE = {
   INACTIVE: { color: '#64748b', bg: '#f8fafc', border: '#e2e8f0', dot: '#94a3b8' },
 }
 
-const ROLES   = ['Senior Librarian', 'Librarian', 'Assistant Librarian']
-const SHIFTS  = ['Morning', 'Afternoon', 'Evening']
+const POSITIONS = ['Senior Librarian', 'Librarian', 'Assistant Librarian']
+const SHIFTS    = ['Morning', 'Afternoon', 'Evening']
 
 /* ─── Icons ─── */
 const PlusIcon    = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -41,8 +41,8 @@ function validate(form, isEdit = false) {
 /* ─── Add / Edit Modal ─── */
 function LibrarianModal({ librarian, onClose, onSave }) {
   const isEdit = !!librarian
-  const EMPTY  = { name: '', username: '', email: '', phone: '', role: 'Librarian', shift: 'Morning', password: '', confirm: '' }
-  const [form, setForm]       = useState(isEdit ? { ...librarian, password: '', confirm: '' } : EMPTY)
+  const EMPTY  = { name: '', username: '', email: '', phone: '', position: 'Librarian', shift: 'Morning', password: '', confirm: '' }
+  const [form, setForm]       = useState(isEdit ? { ...librarian, position: librarian.position || 'Librarian', password: '', confirm: '' } : EMPTY)
   const [errors, setErrors]   = useState({})
   const [showPw, setShowPw]   = useState(false)
   const [step, setStep]       = useState(1)
@@ -119,9 +119,9 @@ function LibrarianModal({ librarian, onClose, onSave }) {
               {isEdit && (
                 <>
                   <div className="lbp-field">
-                    <label className="lbp-label">Role</label>
-                    <select className="lbp-select" value={form.role} onChange={e => set('role', e.target.value)}>
-                      {ROLES.map(r => <option key={r}>{r}</option>)}
+                    <label className="lbp-label">Position</label>
+                    <select className="lbp-select" value={form.position} onChange={e => set('position', e.target.value)}>
+                      {POSITIONS.map(r => <option key={r}>{r}</option>)}
                     </select>
                   </div>
                   <div className="lbp-field">
@@ -138,9 +138,9 @@ function LibrarianModal({ librarian, onClose, onSave }) {
           {step === 2 && !isEdit && (
             <div className="lbp-form-grid">
               <div className="lbp-field">
-                <label className="lbp-label">Role</label>
-                <select className="lbp-select" value={form.role} onChange={e => set('role', e.target.value)}>
-                  {ROLES.map(r => <option key={r}>{r}</option>)}
+                <label className="lbp-label">Position</label>
+                <select className="lbp-select" value={form.position} onChange={e => set('position', e.target.value)}>
+                  {POSITIONS.map(r => <option key={r}>{r}</option>)}
                 </select>
               </div>
               <div className="lbp-field">
@@ -387,12 +387,12 @@ export default function LibrariansPage() {
   const handleAdd = async (form) => {
     try {
       await api.createUser({
-        name: form.name.trim(),
+        name:     form.name.trim(),
         username: form.username.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        role: form.role,
-        shift: form.shift,
+        email:    form.email.trim(),
+        phone:    form.phone.trim(),
+        role:     'LIBRARIAN',          // always stored as LIBRARIAN in DB
+        shift:    form.shift,
         password: form.password,
       })
       await loadLibrarians()
@@ -406,12 +406,12 @@ export default function LibrariansPage() {
   const handleEdit = async (form) => {
     try {
       await api.updateUser(editLib.dbId || editLib.id, {
-        name: form.name,
+        name:     form.name,
         username: form.username,
-        email: form.email,
-        phone: form.phone,
-        role: form.role,
-        shift: form.shift,
+        email:    form.email,
+        phone:    form.phone,
+        role:     'LIBRARIAN',          // always stored as LIBRARIAN in DB
+        shift:    form.shift,
       })
       await loadLibrarians()
       setEditLib(null)

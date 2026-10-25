@@ -30,7 +30,7 @@ export default function LoginPage() {
     try {
       const result = await api.login({ username: user.trim(), password: pw })
       sessionStorage.setItem('lms_user', JSON.stringify({ ...result.user, token: result.token }))
-      navigate(result.user.role === 'ADMIN' ? '/dashboard' : '/librarian')
+      navigate('/dashboard')
     } catch (e) {
       setErr(e.message || 'Invalid email or password. Please try again.')
     } finally {

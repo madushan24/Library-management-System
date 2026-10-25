@@ -58,9 +58,9 @@ export default function Sidebar() {
   const session = stored ? JSON.parse(stored) : { role: 'ADMIN' }
   const isAdmin = session.role === 'ADMIN'
 
-  // Dashboard link points to role-appropriate page
-  const dashTo = isAdmin ? '/dashboard' : '/librarian'
-  const dashLabel = isAdmin ? 'Dashboard' : 'Dashboard'
+  // Dashboard link always goes to /dashboard for both roles
+  const dashTo = '/dashboard'
+  const dashLabel = 'Dashboard'
 
   const handleLogout = () => {
     sessionStorage.removeItem('lms_user')

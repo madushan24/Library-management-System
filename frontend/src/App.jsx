@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage          from './pages/auth/LoginPage'
 import MainLayout         from './components/layout/MainLayout'
 import AdminDashboard     from './pages/dashboard/AdminDashboard'
@@ -17,7 +17,14 @@ function RoleRedirect() {
   const stored  = sessionStorage.getItem('lms_user')
   const session = stored ? JSON.parse(stored) : null
   if (!session) return <Navigate to="/login" replace />
-  return <Navigate to={session.role === 'ADMIN' ? '/dashboard' : '/librarian'} replace />
+  return <Navigate to="/dashboard" replace />
+}
+
+/* Redirects to /login if no valid session exists */
+function AuthGuard({ children }) {
+  const stored = sessionStorage.getItem('lms_user')
+  if (!stored) return <Navigate to="/login" replace />
+  return children
 }
 
 export default function App() {
@@ -25,7 +32,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<MainLayout />}>
+        <Route path="/" element={<AuthGuard><MainLayout /></AuthGuard>}>
           <Route index element={<RoleRedirect />} />
           <Route path="dashboard"  element={<AdminDashboard />} />
           <Route path="librarian"  element={<LibrarianDashboard />} />
