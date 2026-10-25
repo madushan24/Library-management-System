@@ -45,6 +45,7 @@ const STATUS_STYLE = {
 }
 
 const BookIcon   = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+const CheckIcon  = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 const IssuedIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
 const DueIcon    = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 const SearchIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -182,6 +183,7 @@ export default function IssueBookPage() {
   }, [loadAll])
 
   const totalCatalogBooks = books.reduce((sum, b) => sum + (b.total || 0), 0)
+  const availBooks        = books.reduce((sum, b) => sum + (b.available || 0), 0)
   const issuedBooks       = issuedRecords.length
   const dueRecords        = issuedRecords.filter(isDueRecord)
   const dueBooks          = dueRecords.length
@@ -278,32 +280,43 @@ export default function IssueBookPage() {
           <h2 className="ib-title">Issue Book</h2>
           <p className="ib-subtitle">Search member, select book, and confirm issue</p>
         </div>
+        <button type="button" className="ib-btn ib-btn--primary" onClick={openFindMember}>
+          <IssuedIcon /> Issue Book
+        </button>
       </div>
 
       {/* KPI Cards */}
-      <div className="ib-kpis">
+      <div className="ib-kpi-row">
         <div className="ib-kpi">
           <div className="ib-kpi-icon ib-kpi-icon--blue"><BookIcon /></div>
           <div className="ib-kpi-body">
-            <span className="ib-kpi-label">TOTAL BOOKS</span>
-            <span className="ib-kpi-value">{totalCatalogBooks}</span>
-            <span className="ib-kpi-sub">Total catalog inventory</span>
+            <div className="ib-kpi-label">TOTAL BOOKS</div>
+            <div className="ib-kpi-value">{totalCatalogBooks}</div>
+            <div className="ib-kpi-sub">{books.length} unique titles in catalog</div>
+          </div>
+        </div>
+        <div className="ib-kpi">
+          <div className="ib-kpi-icon ib-kpi-icon--green"><CheckIcon /></div>
+          <div className="ib-kpi-body">
+            <div className="ib-kpi-label">AVAILABLE BOOKS</div>
+            <div className="ib-kpi-value ib-kpi-value--green">{availBooks}</div>
+            <div className="ib-kpi-sub">Ready for immediate issue</div>
           </div>
         </div>
         <div className="ib-kpi">
           <div className="ib-kpi-icon ib-kpi-icon--indigo"><IssuedIcon /></div>
           <div className="ib-kpi-body">
-            <span className="ib-kpi-label">ISSUED BOOKS</span>
-            <span className="ib-kpi-value">{issuedBooks}</span>
-            <span className="ib-kpi-sub">Currently out on loan</span>
+            <div className="ib-kpi-label">CURRENTLY ISSUED</div>
+            <div className="ib-kpi-value">{issuedBooks}</div>
+            <div className="ib-kpi-sub">Active loans in circulation</div>
           </div>
         </div>
-        <div className="ib-kpi ib-kpi--warn">
+        <div className={`ib-kpi${dueBooks > 0 ? ' ib-kpi--warn' : ''}`}>
           <div className="ib-kpi-icon ib-kpi-icon--red"><DueIcon /></div>
           <div className="ib-kpi-body">
-            <span className="ib-kpi-label">DUE BOOKS</span>
-            <span className="ib-kpi-value ib-kpi-value--red">{dueBooks}</span>
-            <span className="ib-kpi-sub">Need to be returned</span>
+            <div className="ib-kpi-label">DUE / OVERDUE</div>
+            <div className={`ib-kpi-value${dueBooks > 0 ? ' ib-kpi-value--red' : ''}`}>{dueBooks}</div>
+            <div className="ib-kpi-sub">Need to be returned</div>
           </div>
         </div>
       </div>
@@ -313,11 +326,22 @@ export default function IssueBookPage() {
         <div className="ib-search">
           <SearchIcon />
           <input
-            placeholder="Search member by phone number or ID to start issuing..."
+            className="ib-toolbar-input"
+            placeholder="Search member by phone or ID to start issuing..."
             value={phone}
             onChange={e => setPhone(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && openFindMember()}
           />
+          {phone && (
+            <button
+              type="button"
+              className="ib-search-clear"
+              onClick={() => setPhone('')}
+              title="Clear"
+            >
+              ✕
+            </button>
+          )}
         </div>
         <button type="button" className="ib-btn ib-btn--primary" onClick={openFindMember}>
           <UserIcon /> Find Member
