@@ -21,9 +21,9 @@ function requireAdmin(req, res, next) {
   next()
 }
 
-requireAuth.requireAuth  = requireAuth
+requireAuth.requireAuth = requireAuth
 requireAuth.requireAdmin = requireAdmin
 
 module.exports = requireAuth
-module.exports.requireAuth  = requireAuth
+module.exports.requireAuth = requireAuth
 module.exports.requireAdmin = requireAdmin
