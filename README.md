@@ -31,37 +31,24 @@ A full-stack web application for managing a library — books, members, borrowin
 ## Screenshots
 
 ### Login
-![Login Page](screenshots/login.png)
+<img width="1846" height="1042" alt="image" src="https://github.com/user-attachments/assets/1c907d1c-0cfa-4078-8d1e-6608c2489494" />
+
 
 ### Admin Dashboard
-![Admin Dashboard](screenshots/admin-dashboard.png)
+<img width="1847" height="1048" alt="image" src="https://github.com/user-attachments/assets/2d301e79-0589-4d85-91f2-e5061f97e702" />
 
-### Librarian Dashboard
-![Librarian Dashboard](screenshots/librarian-dashboard.png)
 
 ### Books Management
-![Books Page](screenshots/books.png)
+<img width="1847" height="1027" alt="image" src="https://github.com/user-attachments/assets/e989f0cb-ee8f-46c7-bd83-f6cf9e1be813" />
+
 
 ### Members Management
-![Members Page](screenshots/members.png)
+<img width="1847" height="1037" alt="image" src="https://github.com/user-attachments/assets/e7373f8d-e652-41c4-81fd-6ad2f46ecba1" />
 
-### Issue Book
-![Issue Book](screenshots/issue-book.png)
-
-### Return Book
-![Return Book](screenshots/return-book.png)
-
-### Borrowings
-![Borrowings Page](screenshots/borrowings.png)
-
-### Fines Management
-![Fines Page](screenshots/fines.png)
 
 ### Reports
-![Reports Page](screenshots/reports.png)
+<img width="1850" height="1047" alt="image" src="https://github.com/user-attachments/assets/b3732b2d-012a-44d2-a3d7-72115f579a0e" />
 
-### Settings
-![Settings Page](screenshots/settings.png)
 
 ---
 
